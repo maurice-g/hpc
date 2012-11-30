@@ -1,0 +1,11 @@
+#! /bin/bash
+#
+# Maurice Gonzenbach, 30.11.12, ETH Zurich
+# runs make with different compilers for all blas testing routines
+
+# clear all modules
+module purge
+
+# load gnu programming environment
+module load PrgEnv-gnu
+make PRGENV=gnu
