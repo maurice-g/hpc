@@ -10,6 +10,10 @@
 #include <cstdlib>
 #endif
 
+#include <cassert>
+#include <vector>
+#include <iostream>
+
 #if __cplusplus >= 201103L 
 #define NOEXCEPT_SPEC noexcept
 #else

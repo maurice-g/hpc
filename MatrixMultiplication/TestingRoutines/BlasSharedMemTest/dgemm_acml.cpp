@@ -49,7 +49,7 @@ int main() {
 		dgemm_libsci(A,B,C);
 		end = std::chrono::high_resolution_clock::now();
 		double elapsed_seconds = std::chrono::duration<double>(end-start).count();
-		Measurement m("dgemm with libsci,?noacc?,16thrds",N,N,elapsed_seconds);
+		Measurement m("dgemm with acml ,16thrds",N,N,elapsed_seconds);
 		std::cout << m;
 	}
 
