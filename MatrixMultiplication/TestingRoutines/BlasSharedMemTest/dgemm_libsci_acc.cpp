@@ -1,11 +1,19 @@
 //only with cray or gnu PrgEnv
 //load craype-accel-nvidia20 module!
+//load libsci_acc
+//erro message with gnu CC
+/*INFO: WARNING: libsci_acc/2.0.00.9 does not support istanbul target.
+INFO: WARNING:   is not a supported accelerator target. 
+dgemm_libsci_acc.cpp:8:24: fatal error: libsci_acc.h: No such file or directory
+compilation terminated.
+*/
+//geht auch auskommentiert nicht findet -libsci_acc_gnu47 nicht
 #include <iostream>
 #include <matrix.hpp>
 #include <fillMatrix.hpp>
 #include <Measurement.hpp>
 
-#include <libsci_acc.h>
+//#include <libsci_acc.h>
 
 #include <chrono>
 #include <omp.h>
@@ -42,7 +50,6 @@ int main() {
 	omp_set_num_threads(16);
 	typedef hpc12::matrix<double,hpc12::column_major> matrix_type;
 	for (int N = 512;N < 10000;N*=2) {
-		libsci_acc_init();		//initialise acc
 		matrix_type A(N,N);
 		matrix_type B(N,N);
 		matrix_type C(N,N);
@@ -56,7 +63,6 @@ int main() {
 		double elapsed_seconds = std::chrono::duration<double>(end-start).count();
 		Measurement m("dgemm with libsci_acc,16thrds",N,N,elapsed_seconds);
 		std::cout << m;
-		libsci_acc_finalize();
 	}
 
 
