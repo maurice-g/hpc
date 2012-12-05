@@ -1,3 +1,5 @@
+// compile command: CC -I../../HelperClasses/ -I../../../../extralibs/magma-1.3.0/include -L../../../../extralibs/magma-1.3.0/lib -lmagma dgemm_magma.cpp -o dgemm_magma_gnu.exe -O3 -std=c++11
+
 #include <iostream>
 #include <matrix.hpp>
 #include <fillMatrix.hpp>
