@@ -37,7 +37,7 @@ dgemm_libsci(MatrixType &A, MatrixType &B, MatrixType & C) {
 int main() {
 	omp_set_num_threads(16);
 	typedef hpc12::matrix<double,hpc12::column_major> matrix_type;
-	for (int N = 512;N < 10000;N*=2) {
+	for (int N = 512;N < 20000;N*=2) {
 		matrix_type A(N,N);
 		matrix_type B(N,N);
 		matrix_type C(N,N);

@@ -3,9 +3,9 @@
 # USAGE: make PRGENV=compiler_used 
 
 CXX= CC
-CXXFLAGS= -std=c++11 -O3
+CXXFLAGS=-std=c++11  -O3
 INCLUDE=../../HelperClasses/
-LIBS=
+LIBS=-fopenmp
 
 all: sci acml magma
 
@@ -13,10 +13,10 @@ sci: dgemm_libsci.cpp
 	$(CXX) $(CXXFLAGS) -I$(INCLUDE) dgemm_libsci.cpp $(LIBS) -o dgemm_libsci_$(PRGENV).exe
 
 acml: dgemm_acml.cpp
-	$(CXX) $(CXXFLAGS) -I$(INCLUDE) dgemm_acml.cpp $(LIBS) -fopenmp -o dgemm_acml_$(PRGENV).exe
+	$(CXX) $(CXXFLAGS) -I$(INCLUDE) dgemm_acml.cpp $(LIBS) -o dgemm_acml_$(PRGENV).exe
 
 magma: dgemm_magma.cpp
-	$(CXX) $(CXXFLAGS) -I$(INCLUDE) dgemm_magma.cpp -L$(LIBS) -fopenmp -o dgemm_magma_$(PRGENV).exe
+	$(CXX) $(CXXFLAGS) -I$(INCLUDE) -I../../../../magma-1.3.0/include/ -L../../../../magma-1.3.0/lib/ dgemm_magma.cpp -L$(LIBS) -lmagma -lmagmablas -lcublas -fopenmp -o dgemm_magma_$(PRGENV).exe
 
 .PHONY:helpers
 helpers:
