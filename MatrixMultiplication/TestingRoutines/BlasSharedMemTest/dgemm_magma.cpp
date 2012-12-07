@@ -1,3 +1,5 @@
+// compile command: CC -I../../HelperClasses/ -I../../../../extralibs/magma-1.3.0/include -L../../../../extralibs/magma-1.3.0/lib -lmagma dgemm_magma.cpp -o dgemm_magma_gnu.exe -O3 -std=c++11
+
 #include <iostream>
 #include <matrix.hpp>
 #include <fillMatrix.hpp>
@@ -6,17 +8,15 @@
 #include <chrono>
 #include <omp.h>
 
+#include <magma.h>
 
 
-extern "C" void dgemm_ (char & transa, char & transb,
-                        int & m, int & n, int & k,
-                        double & alpha, double * A, int & LDA,
-                        double * B, int & LDB,
-                        double & beta, double * C, int & LDC);
+
+
 
 template<class MatrixType>
 void
-dgemm_libsci(MatrixType &A, MatrixType &B, MatrixType & C) {
+dgemm_magma(MatrixType &A, MatrixType &B, MatrixType & C) {
         //assert A columnmajor
         char transA = 'N';
         int M = A.num_rows();
@@ -27,7 +27,7 @@ dgemm_libsci(MatrixType &A, MatrixType &B, MatrixType & C) {
         int LDB = B.leading_dimension();
         double beta = 0.;
         int LDC = C.leading_dimension();
-        dgemm_(transA,transA,M,N,K,alpha,A.data(),LDA,B.data(),LDB,beta,C.data(),LDC);
+        magmablas_dgemm(transA,transA,M,N,K,alpha,A.data(),LDA,B.data(),LDB,beta,C.data(),LDC);
 
 
 }
@@ -46,10 +46,10 @@ int main() {
 		//C = A*B
 		std::chrono::time_point<std::chrono::high_resolution_clock> start,end;
 		start = std::chrono::high_resolution_clock::now();
-		dgemm_libsci(A,B,C);
+		dgemm_magma(A,B,C);
 		end = std::chrono::high_resolution_clock::now();
 		double elapsed_seconds = std::chrono::duration<double>(end-start).count();
-		Measurement m("dgemm with acml ,16thrds",N,N,elapsed_seconds);
+		Measurement m("dgemm with libsci,?noacc?,16thrds",N,N,elapsed_seconds);
 		std::cout << m;
 	}
 

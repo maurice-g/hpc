@@ -8,6 +8,8 @@ HPCSE project dgemm
 #ifndef FILLMAT_HPP
 #define FILLMAT_HPP
 
+#include <cstring>
+
 /*! 
 * \p Function which fills a matrix: A(i,j) = i*j
 * - Concepts for Type MatrixType:
@@ -29,9 +31,6 @@ fillMatrix(MatrixType &A) {
 		}
 }
 
-
-
-#endif
 
 
 #endif

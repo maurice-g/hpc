@@ -1,4 +1,4 @@
-#! /bin/bash
+#! /bin/bash -l
 #
 # Maurice Gonzenbach, 30.11.12, ETH Zurich
 # runs make with different compilers for all blas testing routines
@@ -8,4 +8,6 @@ module purge
 
 # load gnu programming environment
 module load PrgEnv-gnu
-make PRGENV=gnu
+make sci PRGENV=gnu
+module switch xt-libsci acml
+make acml PRGENV=gnu
