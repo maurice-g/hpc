@@ -15,7 +15,7 @@ compilation terminated.
 
 //#include <libsci_acc.h>
 
-#include <chrono>
+#include <Timer.hpp>
 #include <omp.h>
 
 
@@ -56,12 +56,10 @@ int main() {
 		fillMatrix(A);
 		fillMatrix(B);
 		//C = A*B
-		std::chrono::time_point<std::chrono::high_resolution_clock> start,end;
-		start = std::chrono::high_resolution_clock::now();
+		Timer t(1);
 		dgemm_libsci(A,B,C);
-		end = std::chrono::high_resolution_clock::now();
-		double elapsed_seconds = std::chrono::duration<double>(end-start).count();
-		Measurement m("dgemm with libsci_acc,16thrds",N,N,elapsed_seconds);
+		t.stop();
+		Measurement m("dgemm with libsci_acc,16thrds",N,N,t.elapsed_s());
 		std::cout << m;
 	}
 
