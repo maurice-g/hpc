@@ -20,9 +20,13 @@ int main() {
 		matrix_type C(N,N);
 		
 		double * d_A, * d_B, *d_C;
-		cudaMalloc((void**) &d_A, N*N*sizeof(double));
+		/*cudaMalloc((void**) &d_A, N*N*sizeof(double));
                 cudaMalloc((void**) &d_B, N*N*sizeof(double));
                 cudaMalloc((void**) &d_C, N*N*sizeof(double));
+*/
+		cudaHostalloc((void**) &d_A, N*N*sizeof(double),CudaHostAllocPortable);
+                cudaHostalloc((void**) &d_B, N*N*sizeof(double)CudaHostAllocPortable);
+                cudaHostalloc((void**) &d_C, N*N*sizeof(double)CudaHostAllocPortable);
 
 		fillMatrix(A);
 		fillMatrix(B);
