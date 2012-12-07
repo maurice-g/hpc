@@ -1,6 +1,7 @@
 #include <iostream>
 #include <matrix.hpp>
 #include <fillMatrix.hpp>
+#include <Measurement.hpp>
 #include <Timer.hpp>
 
 #include <omp.h>

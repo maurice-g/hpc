@@ -2,13 +2,13 @@
 # compiles the helper classes 
 
 CXX= CC
-CXXFLAGS= -std=c++11 -O3
+CXXFLAGS=-O3
 INCLUDE=
 LIBS=-lrt
 
-all: aligned_allocator.o fillMatrix.o matrix.o Measurement.o
+all: aligned_allocator.gch fillMatrix.gch matrix.gch Measurement.gch
 
-%.o: %.hpp
+%.gch: %.hpp
 	$(CXX) $(CXXFLAGS) $(INCLUDE) $(LIBS) -c $<
 
 clean:
