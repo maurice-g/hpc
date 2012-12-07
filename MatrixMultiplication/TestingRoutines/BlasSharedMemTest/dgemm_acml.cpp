@@ -1,9 +1,8 @@
 #include <iostream>
 #include <matrix.hpp>
 #include <fillMatrix.hpp>
-#include <Measurement.hpp>
+#include <Timer.hpp>
 
-#include <chrono>
 #include <omp.h>
 
 
@@ -44,12 +43,10 @@ int main() {
 		fillMatrix(A);
 		fillMatrix(B);
 		//C = A*B
-		std::chrono::time_point<std::chrono::high_resolution_clock> start,end;
-		start = std::chrono::high_resolution_clock::now();
+		Timer _t(1);
 		dgemm_libsci(A,B,C);
-		end = std::chrono::high_resolution_clock::now();
-		double elapsed_seconds = std::chrono::duration<double>(end-start).count();
-		Measurement m("dgemm with acml ,16thrds",N,N,elapsed_seconds);
+		_t.stop();
+		Measurement m("dgemm with acml ,16thrds",N,N,_t.elapsed_s());
 		std::cout << m;
 	}
 
