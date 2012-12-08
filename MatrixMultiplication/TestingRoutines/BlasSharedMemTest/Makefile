@@ -14,7 +14,7 @@ endif
 
 LIBS=$(LOPENMP) -lrt
 
-all: libsci acml magma
+all: libsci acml magma cublas cublas_pinned
 
 libsci: dgemm_libsci.cpp
 	$(CXX) $(CXXFLAGS) -I$(INCLUDE) dgemm_libsci.cpp $(LIBS) -o dgemm_libsci_$(PRGENV).exe
@@ -28,6 +28,8 @@ magma: dgemm_magma.cpp
 cublas: dgemm_cublas.cu
 	nvcc $(CXXFLAGS) -I$(INCLUDE) -lcublas dgemm_cublas.cu -o dgemm_cublas_$(PRGENV).exe -lrt
 
+cublas_pinned: dgemm_cublas_hostalloc.cu
+	nvcc $(CXXFLAGS) -I$(INCLUDE) -lcublas dgemm_cublas_hostalloc.cu -o dgemm_cublas_hostalloc_$(PRGENV).exe -lrt
 
 #.PHONY:helpers
 #helpers:
