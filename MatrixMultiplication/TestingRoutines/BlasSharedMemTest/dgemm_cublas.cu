@@ -20,13 +20,9 @@ int main() {
 		matrix_type C(N,N);
 		
 		double * d_A, * d_B, *d_C;
-		/*cudaMalloc((void**) &d_A, N*N*sizeof(double));
+		cudaMalloc((void**) &d_A, N*N*sizeof(double));
                 cudaMalloc((void**) &d_B, N*N*sizeof(double));
                 cudaMalloc((void**) &d_C, N*N*sizeof(double));
-*/
-		cudaHostalloc((void**) &d_A, N*N*sizeof(double),CudaHostAllocPortable);
-                cudaHostalloc((void**) &d_B, N*N*sizeof(double)CudaHostAllocPortable);
-                cudaHostalloc((void**) &d_C, N*N*sizeof(double)CudaHostAllocPortable);
 
 		fillMatrix(A);
 		fillMatrix(B);
@@ -41,7 +37,7 @@ int main() {
 		double alpha = 1.;
 		double beta = 0.;
 		cublasDgemm(trans,trans,N,N,N,alpha,d_A,N,d_B,N,beta,d_C,N);
-//dgemm_cublas(d_A,d_B,d_C);
+		//dgemm_cublas(d_A,d_B,d_C);
 		cudaMemcpy(C.data(),d_C,N*N*sizeof(double),cudaMemcpyDeviceToHost);
 		
 		_t.stop();
