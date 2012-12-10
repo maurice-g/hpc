@@ -33,6 +33,12 @@ int main() {
 		cudaMallocHost((void**) &h_B,N*N*sizeof(double));
 		cudaMallocHost((void**) &h_C,N*N*sizeof(double));
 
+
+		//transfer data into pinned memory
+		cudaMemcpy(h_A, A.data(), N*N*sizeof(double),cudaMemcpyHostToHost);
+		cudaMemcpy(h_B, B.data(), N*N*sizeof(double),cudaMemcpyHostToHost);
+
+		// include time to copy to /from device
 		Timer _t(1);
 
 		cudaMemcpy (d_A, h_A,N*N*sizeof(double),cudaMemcpyHostToDevice);
