@@ -4,15 +4,16 @@
 #include <Measurement.hpp>
 
 #include <Timer.hpp>
+#include <libsci_acc.h>
 #include <omp.h>
 
 
 
-extern "C" void DGEMM (char & transa, char & transb,
-                        int & m, int & n, int & k,
-                        double & alpha, double * A, int & LDA,
-                        double * B, int & LDB,
-                        double & beta, double * C, int & LDC);
+//extern "C" void dgemm(char & transa, char & transb,
+//                        int & m, int & n, int & k,
+//                        double & alpha, double * A, int & LDA,
+//                        double * B, int & LDB,
+//                        double & beta, double * C, int & LDC);
 
 template<class MatrixType>
 void
@@ -27,7 +28,7 @@ dgemm_libsci(MatrixType &A, MatrixType &B, MatrixType & C) {
         int LDB = B.leading_dimension();
         double beta = 0.;
         int LDC = C.leading_dimension();
-        DGEMM(transA,transA,M,N,K,alpha,A.data(),LDA,B.data(),LDB,beta,C.data(),LDC);
+        dgemm(transA,transA,M,N,K,alpha,A.data(),LDA,B.data(),LDB,beta,C.data(),LDC);
 
 
 }
