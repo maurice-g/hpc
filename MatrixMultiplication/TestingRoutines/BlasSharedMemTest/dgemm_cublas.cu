@@ -46,7 +46,7 @@ int main() {
 		//free memory on device
 		cudaFree(d_A);
 		cudaFree(d_B);
-		cudaFree(d_B);
+		cudaFree(d_C);
 	}
 
 
