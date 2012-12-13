@@ -30,10 +30,10 @@ magma: dgemm_magma.cpp
 	$(CXX) $(CXXFLAGS) -I$(INCLUDE) -I../../../../magma-1.3.0/include/ -L../../../../magma-1.3.0/lib/ dgemm_magma.cpp -L$(LIBS) -lmagma -lmagmablas -lcublas -fopenmp -o dgemm_magma_$(PRGENV).exe
 
 cublas: dgemm_cublas.cu
-	nvcc $(CXXFLAGS) -I$(INCLUDE) -lcublas dgemm_cublas.cu -o dgemm_cublas_$(PRGENV).exe -lrt
+	nvcc $(CXXFLAGS) -I$(INCLUDE) -lcublas dgemm_cublas.cu -o dgemm_cublas_$(PRGENV).exe -lrt -O3
 
 cublas_pinned: dgemm_cublas_hostalloc.cu
-	nvcc $(CXXFLAGS) -I$(INCLUDE) -lcublas dgemm_cublas_hostalloc.cu -o dgemm_cublas_hostalloc_$(PRGENV).exe -lrt
+	nvcc $(CXXFLAGS) -I$(INCLUDE) -lcublas dgemm_cublas_hostalloc.cu -o dgemm_cublas_hostalloc_$(PRGENV).exe -lrt -O3
 
 #.PHONY:helpers
 #helpers:
