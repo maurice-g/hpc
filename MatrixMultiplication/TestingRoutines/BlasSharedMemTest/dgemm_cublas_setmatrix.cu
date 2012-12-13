@@ -12,7 +12,8 @@
 	
 
 int main() {
-	cublasStatus_t status = cublasCreate();
+	cublasHandle_t handle;
+	cublasStatus_t status = cublasCreate(&handle);
 
 	typedef hpc12::matrix<double,hpc12::column_major> matrix_type;
 	for (int N = 512;N < 10000;N*=2) {
@@ -48,11 +49,10 @@ int main() {
 		cublasSetMatrix (B.num_rows(),B.num_cols(),sizeof(double),h_B,B.leading_dimension(),d_B,B.leading_dimension());
 		cudaMemset (d_C, 0., N*N*sizeof(double));
 		//C = A*B
-		char trans = 'N';
 		double alpha = 1.;
 		double beta = 0.;
 		
-		cublasDgemm(trans,trans,N,N,N,alpha,d_A,N,d_B,N,beta,d_C,N);
+		cublasDgemm(handle,CUBLAS_OP_N,CUBLAS_OP_N,N,N,N,&alpha,d_A,N,d_B,N,&beta,d_C,N);
 		
 		cublasGetMatrix(C.num_rows(),C.num_cols(),sizeof(double),d_C,C.leading_dimension(),h_C,C.leading_dimension());
 		
@@ -67,7 +67,7 @@ int main() {
 		
 		cudaFreeHost(h_A);cudaFreeHost(h_B);cudaFreeHost(h_C);
 	}
-	cublasDestroy(status);
+	cublasDestroy(handle);
 
 	return 0;
 }
