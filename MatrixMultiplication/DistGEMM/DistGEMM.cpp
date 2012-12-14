@@ -45,6 +45,10 @@ DistGEMM::DistGEMM(int n, int numprocs, int cubes) {
 	libsci_acc_HostAlloc((void**)&B, sizeof(val_type)*N*N);
 	
 	
+	#ifdef DEBUGOUTPUT 
+		std::cout << "Hello from Rank " << rank << " with coordinates (i,j,k) = (" << p_i <<","<<p_j<<","<<p_k<<")\n";
+	#endif
+	
 }
 
 void DistGEMM::initializeLehmer() {
