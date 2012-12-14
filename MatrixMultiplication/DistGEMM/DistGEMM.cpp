@@ -3,6 +3,7 @@
 #include <libsci_acc.h>
 #include <cassert>
 #include <cmath>
+#include <iostream>
 
 DistGEMM::DistGEMM(int n, int numprocs, int cubes) {
 	assert(cubes*cubes*cubes == numprocs);	
@@ -39,9 +40,9 @@ DistGEMM::DistGEMM(int n, int numprocs, int cubes) {
 	p_j = coords[1];
 	p_k = coords[2];
 	
-	libsci_acc_HostAlloc((void**)&A, sizeof(val_type)*N*N);
-	libsci_acc_HostAlloc((void**)&B, sizeof(val_type)*N*N);
-	libsci_acc_HostAlloc((void**)&B, sizeof(val_type)*N*N);
+	libsci_acc_HostAlloc((void**)&A, sizeof(val_type)*blocksize*blocksize);
+	libsci_acc_HostAlloc((void**)&B, sizeof(val_type)*blocksize*blocksize);
+	libsci_acc_HostAlloc((void**)&B, sizeof(val_type)*blocksize*blocksize);
 	
 	
 	#ifdef DEBUGOUTPUT 
@@ -64,7 +65,7 @@ void DistGEMM::performGEMM() {
 	double alpha = 1.;
 	double beta = 0.;
 
-	dgemm(transA, transA, blocksize, blocksize, blocksize, alpha, A, blockSize, B, blockSize, beta, C, blockSize);
+	dgemm(transA, transA, blocksize, blocksize, blocksize, alpha, A, blocksize, B, blocksize, beta, C, blocksize);
 
 	MPI_Reduce(C, C, blocksize*blocksize, mpi_val_type, MPI_SUM, root_j, comm_j);
 }	

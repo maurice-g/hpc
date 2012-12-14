@@ -10,7 +10,7 @@ LIBS=-lrt -openmp
 all: DistGEMM
 
 DistGEMM: DistGEMM.hpp DistGEMM.cpp
-	$(CXX) $(CXXFLAGS) -I$(INCLUDE) main.cp DistGEMM.cpp $(LIBS) -o DistGEMM.exe
+	$(CXX) $(CXXFLAGS) -I$(INCLUDE) main.cpp DistGEMM.cpp $(LIBS) -o DistGEMM.exe
 
 clean:
 	rm -rf *.exe
