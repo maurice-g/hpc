@@ -7,6 +7,7 @@
 * \brief Class implementing distributed gemm for a n x n matrix
 */
 
+
 class DistGEMM {
 public:
 	typedef double 		val_type;
@@ -19,7 +20,7 @@ public:
 	* @param P is the number of nodes 
 	*/
 
-	DistGEMM(int N, int P, int);					// constructor: initialize communicators & topology, matrix allocation
+	DistGEMM(int N, int P, int d);					// constructor: initialize communicators & topology, matrix allocation
 	void initializeLehmer();					// initialize Lehmer matrix A (where k=0) and B (where i=0)
 	void performGEMM();						// perform the matrix multiplication
 
