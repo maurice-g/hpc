@@ -20,7 +20,7 @@ public:
 	DistGEMM(int N, int P);					// constructor: initialize communicators, matrix allocation
 	void initializeLehmer();					// initialize Lehmer matrix A (where k=0) and B (where i=0)
 	void performGEMM();						// perform the matrix multiplication
-=======
+
 	DistGEMM(int N, int P);					// constructor: initialize communicators & topology, matrix allocation
 	initializeLehmer();					// initialize Lehmer matrix A (where k=0) and B (where i=0)
 	performGEMM();						// perform the matrix multiplication
