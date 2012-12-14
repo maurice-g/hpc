@@ -16,8 +16,8 @@ public:
 	* @param n is the size of the entire matrix
 	*/
 	DistGEMM(int N, int P);					// constructor: initialize communicators, matrix allocation
-	initializeLehmer();					// initialize Lehmer matrix A (where k=0) and B (where i=0)
-	performGEMM();						// perform the matrix multiplication
+	void initializeLehmer();					// initialize Lehmer matrix A (where k=0) and B (where i=0)
+	void performGEMM();						// perform the matrix multiplication
 
 private:
 	MPI_Comm	comm_i, comm_j, comm_k;
