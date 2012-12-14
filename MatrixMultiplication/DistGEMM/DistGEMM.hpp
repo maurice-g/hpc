@@ -19,13 +19,13 @@ public:
 	* @param P is the number of nodes 
 	*/
 
-	DistGEMM(int N, int P);					// constructor: initialize communicators & topology, matrix allocation
+	DistGEMM(int N, int P, int);					// constructor: initialize communicators & topology, matrix allocation
 	void initializeLehmer();					// initialize Lehmer matrix A (where k=0) and B (where i=0)
 	void performGEMM();						// perform the matrix multiplication
 
 
 private:
-	int rank, size;
+	int rank, size, N;
 	MPI_Comm	comm_i, comm_j, comm_k;
 	val_type *A, *B, *C;
 

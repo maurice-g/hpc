@@ -1,12 +1,12 @@
 #include "DistGEMM.hpp"
-#include <MPI.h>
+#include <mpi.h>
 #include <libsci_acc.h>
 #include <cassert>
 #include <cmath>
 
 DistGEMM::DistGEMM(int n, int numprocs, int cubes) {
-	std::assert(cubes*cubes*cubes == numprocs);	
-	std::assert(n % cubes == 0);
+	assert(cubes*cubes*cubes == numprocs);	
+	assert(n % cubes == 0);
 	
 	MPI_Comm_size(MPI_COMM_WORLD,&size);
 	MPI_Comm_rank(MPI_COMM_WORLD,&rank);
@@ -25,7 +25,7 @@ DistGEMM::DistGEMM(int n, int numprocs, int cubes) {
 	MPI_Cart_create(MPI_COMM_WORLD,3,nums,periodic,true,&cart_comm);
 	
 	//assign comm_i, comm_j, comm_k
-	int logv_i = {true,false,false};
+	int* logv_i[3] = {true,false,false};
 	int logv_j = {false,true,false};
 	int logv_k = {false,false,true};
 	MPI_Cart_sub(cart_comm,logv_i,comm_i);
