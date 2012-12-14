@@ -13,7 +13,7 @@ DistGEMM::DistGEMM(int n, int numprocs, int cubes) {
 
 	P = numprocs;
 	cubeSize = cubes;					//# processors in each direction of cartesian topology
-	blockSize = N/cubeSize;
+	blockSize = n/cubeSize;
 	//build MPI topology
 	int nums[3];						//number of nodes in each dimension (x,y,z)
 	MPI_Dims_create(size,3,nums);
@@ -64,7 +64,7 @@ void DistGEMM::performGEMM() {
 	double alpha = 1.;
 	double beta = 0.;
 
-	dgemm(transA, transA, blocksize, blocksize, blocksize, alpha, A, N, B, N, beta, C, N);
+	dgemm(transA, transA, blocksize, blocksize, blocksize, alpha, A, blockSize, B, blockSize, beta, C, blockSize);
 
 	MPI_Reduce(C, C, blocksize*blocksize, mpi_val_type, MPI_SUM, root_j, comm_j);
 }	
