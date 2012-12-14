@@ -13,9 +13,10 @@ public:
 
 	/*!
 	* Constructor
-	* @param n is the size of the entire matrix
+	* @param N is the size of the entire matrix
+	* @param P is the number of nodes 
 	*/
-	DistGEMM(int N, int P);					// constructor: initialize communicators, matrix allocation
+	DistGEMM(int N, int P);					// constructor: initialize communicators & topology, matrix allocation
 	initializeLehmer();					// initialize Lehmer matrix A (where k=0) and B (where i=0)
 	performGEMM();						// perform the matrix multiplication
 
