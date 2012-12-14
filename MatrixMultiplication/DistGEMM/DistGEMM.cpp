@@ -12,9 +12,8 @@ DistGEMM::DistGEMM(int n, int numprocs, int cubes) {
 	MPI_Comm_rank(MPI_COMM_WORLD,&rank);
 
 	P = numprocs;
-	N = n;
 	cubeSize = cubes;					//# processors in each direction of cartesian topology
-
+	blockSize = N/cubeSize;
 	//build MPI topology
 	int nums[3];						//number of nodes in each dimension (x,y,z)
 	MPI_Dims_create(size,3,nums);
@@ -25,12 +24,12 @@ DistGEMM::DistGEMM(int n, int numprocs, int cubes) {
 	MPI_Cart_create(MPI_COMM_WORLD,3,nums,periodic,true,&cart_comm);
 	
 	//assign comm_i, comm_j, comm_k
-	int* logv_i[3] = {true,false,false};
-	int logv_j = {false,true,false};
-	int logv_k = {false,false,true};
-	MPI_Cart_sub(cart_comm,logv_i,comm_i);
-	MPI_Cart_sub(cart_comm,logv_j,comm_j);
-	MPI_Cart_sub(cart_comm,logv_k,comm_k);
+	int logv_i[] = {true,false,false};
+	int logv_j[] = {false,true,false};
+	int logv_k[] = {false,false,true};
+	MPI_Cart_sub(cart_comm,logv_i,&comm_i);
+	MPI_Cart_sub(cart_comm,logv_j,&comm_j);
+	MPI_Cart_sub(cart_comm,logv_k,&comm_k);
 	
 	//assign the coordinates to each rank
 	int d = 3;

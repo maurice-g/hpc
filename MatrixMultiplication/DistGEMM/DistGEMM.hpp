@@ -25,11 +25,11 @@ public:
 
 
 private:
-	int rank, size, N;
+	int rank, size;
 	MPI_Comm	comm_i, comm_j, comm_k;
 	val_type *A, *B, *C;
 
-	count_type blocksize;					// matrix size per node
+	count_type blockSize;					// matrix size per node
 	count_type P;							// # of nodes
 	count_type p_i,p_j,p_k;					// topology index of p	
 	count_type cubeSize;					//MPI 3d Topology length ->(P^1/3)
