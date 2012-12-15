@@ -12,6 +12,8 @@ DistGEMM::DistGEMM(int n, int numprocs, int cubes) {
 	MPI_Comm_size(MPI_COMM_WORLD,&size);
 	MPI_Comm_rank(MPI_COMM_WORLD,&rank);
 
+	libsci_acc_init();
+
 	P = numprocs;
 	cubeSize = cubes;					//# processors in each direction of cartesian topology
 	blocksize = n/cubeSize;
@@ -74,4 +76,13 @@ void DistGEMM::performGEMM() {
 	dgemm(transA, transA, blocksize, blocksize, blocksize, alpha, A, blocksize, B, blocksize, beta, C, blocksize);
 
 	MPI_Reduce(C, C, blocksize*blocksize, mpi_val_type, MPI_SUM, root_j, comm_j);
+}
+
+DistGEMM::~DistGEMM() {
+	libsci_acc_FreeHost(A);
+	libsci_acc_FreeHost(B);
+	libsci_acc_FreeHost(C);
+
+
+
 }	
