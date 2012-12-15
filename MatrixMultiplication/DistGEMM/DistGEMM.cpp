@@ -52,7 +52,13 @@ DistGEMM::DistGEMM(int n, int numprocs, int cubes) {
 }
 
 void DistGEMM::initializeLehmer() {
-
+	// fill A and B as Lehmer matrices
+	for (count_type j=0; j<blocksize; j++) {
+		for (count_type i=0; i<blocksize; i++) {
+			A[j*blocksize+i] = std::min(i,j)/std::max(i,j);
+			B[j*blocksize+i] = A[j*blocksize+i];
+		}
+	}
 }
 
 void DistGEMM::performGEMM() {

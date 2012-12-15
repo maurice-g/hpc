@@ -10,6 +10,7 @@ int main(int argc, char* argv[]) {
 	int topsize = std::atoi(argv[3]);	//size of 3dtopology: topsize x topsize x topsize
 	
 	DistGEMM m(N,nprocs,topsize);
+	m.initializeLehmer();
 	MPI_Finalize();
 	return 0;
 }
