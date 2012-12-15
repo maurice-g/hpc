@@ -6,11 +6,20 @@ CXXFLAGS= -O3
 INCLUDE=../HelperClasses/
 
 LIBS=-lrt -openmp
+DEBUG= -g -DDEBUGOUTPUT -hlist=m 
 
 all: DistGEMM
 
-DistGEMM: DistGEMM.hpp DistGEMM.cpp
-	$(CXX) -DDEBUGOUTPUT $(CXXFLAGS) -I$(INCLUDE) main.cpp DistGEMM.cpp $(LIBS) -o DistGEMM.exe
+DistGEMM: main.o DistGemm.o
+	$(CXX) $(DEBUG) $(CXXFLAGS) -I$(INCLUDE)  $(LIBS) main.o DistGemm.o -o DistGEMM.exe
+
+main.o : main.cpp DistGEMM.cpp
+	$(CXX) $(DEBUG) $(CXXFLAGS) -c -I$(INCLUDE) main.cpp -o main.o
+
+DistGemm.o: DistGEMM.cpp DistGEMM.hpp
+	$(CXX) $(DEBUG) $(CXXFLAGS) -c -I$(INCLUDE) $(LIBS) DistGEMM.cpp -o DistGemm.o
 
 clean:
-	rm -rf *.exe *.o
+	rm -rf *.exe
+	rm -rf *.o
+	rm -r *.lst
