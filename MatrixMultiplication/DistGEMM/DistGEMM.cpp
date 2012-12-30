@@ -18,9 +18,8 @@ DistGEMM::DistGEMM(int n, int numprocs, int cubes) {
 	cubeSize = cubes;					//# processors in each direction of cartesian topology
 	blocksize = n/cubeSize;
 	//build MPI topology
-	int nums[3];						//number of nodes in each dimension (x,y,z)
+	int nums[3] = {cubes, cubes, cubes};			//number of nodes in each dimension (x,y,z)
 	MPI_Dims_create(size,3,nums);
-	
 	//build global communicator, then subdivide into comm_i, comm_j, comm_k
 	int periodic[3] = {0, 0, 0};
 	MPI_Comm cart_comm;
@@ -33,7 +32,7 @@ DistGEMM::DistGEMM(int n, int numprocs, int cubes) {
 	MPI_Cart_sub(cart_comm,logv_i,&comm_i);
 	MPI_Cart_sub(cart_comm,logv_j,&comm_j);
 	MPI_Cart_sub(cart_comm,logv_k,&comm_k);
-	
+
 	//assign the coordinates to each rank
 	int d = 3;
 	int coords[3];
@@ -41,11 +40,9 @@ DistGEMM::DistGEMM(int n, int numprocs, int cubes) {
 	p_i = coords[0];
 	p_j = coords[1];
 	p_k = coords[2];
-	
 	libsci_acc_HostAlloc((void**)&A, sizeof(val_type)*blocksize*blocksize);
 	libsci_acc_HostAlloc((void**)&B, sizeof(val_type)*blocksize*blocksize);
 	libsci_acc_HostAlloc((void**)&B, sizeof(val_type)*blocksize*blocksize);
-	
 	
 	#ifdef DEBUGOUTPUT 
 		std::cout << "Hello from Rank " << rank << " with coordinates (i,j,k) = (" << p_i <<","<<p_j<<","<<p_k<<")\n";
@@ -57,7 +54,7 @@ void DistGEMM::initializeLehmer() {
 	// fill A and B as Lehmer matrices
 	for (count_type j=0; j<blocksize; j++) {
 		for (count_type i=0; i<blocksize; i++) {
-			A[j*blocksize+i] = std::min(i,j)/std::max(i,j);
+			A[j*blocksize+i] = std::min(i+1,j+1)/std::max(i+1,j+1);
 			B[j*blocksize+i] = A[j*blocksize+i];
 		}
 	}
