@@ -52,14 +52,12 @@ DistGEMM::DistGEMM(int n, int numprocs, int cubes) {
 	p_j = coords[1];
 	p_k = coords[2];
 	
-	// get the root (=0 rank) of each 2D layer (ij=k,jk=i,ik=j)
-	int rootcoords_i[] = {0,p_j,p_k};
-	int rootcoords_j[] = {p_i,0,p_k};
-	int rootcoords_k[] = {p_i,p_j,0};
-	// MAYBE NOT WORKING BECAUSE CART_COMM RANKS ARE NOT EQUAL TO CART_I,CART_J,CART_K RANKS...
-	MPI_Cart_rank(comm_i, rootcoords_i, &root_i);
-	MPI_Cart_rank(comm_j, rootcoords_j, &root_j);
-	MPI_Cart_rank(comm_k, rootcoords_k, &root_k);
+	// get the root of each 1D layer
+	int rootcoord = 0;
+	// ATTENTION: root_i!=p_i(0) 
+	MPI_Cart_rank(comm_i, &rootcoord, &root_i);
+	MPI_Cart_rank(comm_j, &rootcoord, &root_j);
+	MPI_Cart_rank(comm_k, &rootcoord, &root_k);
 
 	libsci_acc_HostAlloc((void**)&A, sizeof(val_type)*blocksize*blocksize);
 	libsci_acc_HostAlloc((void**)&B, sizeof(val_type)*blocksize*blocksize);
@@ -83,29 +81,30 @@ void DistGEMM::initializeLehmer() {
 
 void DistGEMM::performGEMM() {
 	// send root_k's matrix A to all other processors in communicator comm_k
-	//MPI_Bcast(A, blocksize*blocksize, mpi_val_type, root_k, comm_k);
+	MPI_Bcast(A, blocksize*blocksize, mpi_val_type, root_k, comm_k);
 	// send root_i's Matrix B to all other processors in communicator comm_i
-	//MPI_Bcast(B, blocksize*blocksize, mpi_val_type, root_i, comm_i);
-	std::cout << "perform1" << std::endl;
+	MPI_Bcast(B, blocksize*blocksize, mpi_val_type, root_i, comm_i);
+	
 	char transA = 'N';
 	double alpha = 1.;
 	double beta = 0.;
 	
 	dgemm(transA, transA, blocksize, blocksize, blocksize, alpha, A, blocksize, B, blocksize, beta, C, blocksize);
-	
-	MPI_Reduce((rank_j==0 ? MPI_IN_PLACE : C), C, blocksize*blocksize, mpi_val_type, MPI_SUM, 0, comm_j);
+	MPI_Reduce((rank_j==root_j ? MPI_IN_PLACE : C), C, blocksize*blocksize, mpi_val_type, MPI_SUM, root_j, comm_j);
 }
 
 void DistGEMM::output_result() {
 	MPI_Barrier(MPI_COMM_WORLD);
 	for (int i=0; i<cubeSize; i++) {
 		for (int k=0; k<cubeSize; k++) {
-			if (p_i==i && p_j==k && rank_k==0) {
+			MPI_Barrier(MPI_COMM_WORLD);
+			// very strange output behaviour: always (0,0) first, other procs in random order
+			if (p_i==i && p_k==k && p_j==0) {
+				std::cout << "output_from(i,k): " << p_i << "," << p_k << std::endl;
 				for (int op=0; op<blocksize*blocksize; op++) {
-					std::cout << A[op] << std::endl;
+					std::cout << C[op] << std::endl;
 				}
 			}
-			MPI_Barrier(MPI_COMM_WORLD);
 		}
 	}
 }
