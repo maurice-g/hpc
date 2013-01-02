@@ -9,14 +9,17 @@ DistGEMM::DistGEMM(int n, int numprocs, int cubes) {
 	assert(cubes*cubes*cubes == numprocs);	
 	assert(n % cubes == 0);
 	
+	// removed size,rank from class, isn't size==numprocs??
+	int size;	
 	MPI_Comm_size(MPI_COMM_WORLD,&size);
-	MPI_Comm_rank(MPI_COMM_WORLD,&rank);
+	assert(size==numprocs);
 
 	libsci_acc_init();
 
 	P = numprocs;
 	cubeSize = cubes;					//# processors in each direction of cartesian topology
 	blocksize = n/cubeSize;
+	
 	//build MPI topology
 	int nums[3] = {cubes, cubes, cubes};			//number of nodes in each dimension (x,y,z)
 	MPI_Dims_create(size,3,nums);
@@ -33,19 +36,37 @@ DistGEMM::DistGEMM(int n, int numprocs, int cubes) {
 	MPI_Cart_sub(cart_comm,logv_j,&comm_j);
 	MPI_Cart_sub(cart_comm,logv_k,&comm_k);
 
+        MPI_Comm_rank(MPI_COMM_WORLD,&rank_cart);
+
+	//get and save the new ranks for each communications layer
+	MPI_Comm_rank(comm_i,&rank_i);
+	MPI_Comm_rank(comm_j,&rank_j);
+	MPI_Comm_rank(comm_k,&rank_k);
+	//std::cout << "Global= " << rank << ";i=" << ranki << ";j=" << rankj << ";k=" << rankk << std::endl;
+
 	//assign the coordinates to each rank
 	int d = 3;
 	int coords[3];
-	MPI_Cart_coords(cart_comm,rank,d,coords);
+	MPI_Cart_coords(cart_comm,rank_cart,d,coords);
 	p_i = coords[0];
 	p_j = coords[1];
 	p_k = coords[2];
+	
+	// get the root (=0 rank) of each 2D layer (ij=k,jk=i,ik=j)
+	int rootcoords_i[] = {0,p_j,p_k};
+	int rootcoords_j[] = {p_i,0,p_k};
+	int rootcoords_k[] = {p_i,p_j,0};
+	// MAYBE NOT WORKING BECAUSE CART_COMM RANKS ARE NOT EQUAL TO CART_I,CART_J,CART_K RANKS...
+	MPI_Cart_rank(comm_i, rootcoords_i, &root_i);
+	MPI_Cart_rank(comm_j, rootcoords_j, &root_j);
+	MPI_Cart_rank(comm_k, rootcoords_k, &root_k);
+
 	libsci_acc_HostAlloc((void**)&A, sizeof(val_type)*blocksize*blocksize);
 	libsci_acc_HostAlloc((void**)&B, sizeof(val_type)*blocksize*blocksize);
-	libsci_acc_HostAlloc((void**)&B, sizeof(val_type)*blocksize*blocksize);
+	libsci_acc_HostAlloc((void**)&C, sizeof(val_type)*blocksize*blocksize);
 	
 	#ifdef DEBUGOUTPUT 
-		std::cout << "Hello from Rank " << rank << " with coordinates (i,j,k) = (" << p_i <<","<<p_j<<","<<p_k<<")\n";
+		std::cout << "Hello from Rank " << rank_cart << " with coordinates (i,j,k) = (" << p_i <<","<<p_j<<","<<p_k<<")\n";
 	#endif
 	
 }
@@ -54,32 +75,44 @@ void DistGEMM::initializeLehmer() {
 	// fill A and B as Lehmer matrices
 	for (count_type j=0; j<blocksize; j++) {
 		for (count_type i=0; i<blocksize; i++) {
-			A[j*blocksize+i] = std::min(i+1,j+1)/std::max(i+1,j+1);
-			B[j*blocksize+i] = A[j*blocksize+i];
+			A[j*blocksize+i] = val_type(std::min(p_i*blocksize+i+1,p_j*blocksize+j+1))/std::max(p_i*blocksize+i+1,p_j*blocksize+j+1);
+			B[j*blocksize+i] = val_type(std::min(p_j*blocksize+i+1,p_k*blocksize+j+1))/std::max(p_j*blocksize+i+1,p_k*blocksize+j+1);
 		}
 	}
 }
 
 void DistGEMM::performGEMM() {
 	// send root_k's matrix A to all other processors in communicator comm_k
-	MPI_Bcast(A, blocksize*blocksize, mpi_val_type, root_k, comm_k);
+	//MPI_Bcast(A, blocksize*blocksize, mpi_val_type, root_k, comm_k);
 	// send root_i's Matrix B to all other processors in communicator comm_i
-	MPI_Bcast(B, blocksize*blocksize, mpi_val_type, root_i, comm_i);
-
+	//MPI_Bcast(B, blocksize*blocksize, mpi_val_type, root_i, comm_i);
+	std::cout << "perform1" << std::endl;
 	char transA = 'N';
 	double alpha = 1.;
 	double beta = 0.;
-
+	
 	dgemm(transA, transA, blocksize, blocksize, blocksize, alpha, A, blocksize, B, blocksize, beta, C, blocksize);
-
-	MPI_Reduce(C, C, blocksize*blocksize, mpi_val_type, MPI_SUM, root_j, comm_j);
+	
+	MPI_Reduce((rank_j==0 ? MPI_IN_PLACE : C), C, blocksize*blocksize, mpi_val_type, MPI_SUM, 0, comm_j);
 }
+
+void DistGEMM::output_result() {
+	MPI_Barrier(MPI_COMM_WORLD);
+	for (int i=0; i<cubeSize; i++) {
+		for (int k=0; k<cubeSize; k++) {
+			if (p_i==i && p_j==k && rank_k==0) {
+				for (int op=0; op<blocksize*blocksize; op++) {
+					std::cout << A[op] << std::endl;
+				}
+			}
+			MPI_Barrier(MPI_COMM_WORLD);
+		}
+	}
+}
+			
 
 DistGEMM::~DistGEMM() {
 	libsci_acc_FreeHost(A);
 	libsci_acc_FreeHost(B);
 	libsci_acc_FreeHost(C);
-
-
-
 }	

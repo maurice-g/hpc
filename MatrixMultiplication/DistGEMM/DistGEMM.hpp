@@ -24,18 +24,18 @@ public:
 	~DistGEMM();
 	void initializeLehmer();					// initialize Lehmer matrix A (where k=0) and B (where i=0)
 	void performGEMM();						// perform the matrix multiplication
-
+	void output_result();						
 
 private:
-	int rank, size;
 	MPI_Comm	comm_i, comm_j, comm_k;
+	int rank_cart,rank_i,rank_j,rank_k;				// the rank of each communicator
 	val_type *A, *B, *C;
 
 	count_type blocksize;					// matrix size per node
-	count_type P;							// # of nodes
+	count_type P;						// # of nodes
 	count_type p_i,p_j,p_k;					// topology index of p	
 	count_type cubeSize;					//MPI 3d Topology length ->(P^1/3)
-	count_type root_i, root_j, root_k;
+	int root_i, root_j, root_k;
 
 };
 

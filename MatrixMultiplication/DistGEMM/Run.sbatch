@@ -6,5 +6,5 @@
 #SBATCH --error="errorlog.txt"
 echo "Nodes on which it executes"
 echo $SLURM_JOB_NODELIST
-aprun -n 8 -d 16 -N 1 ./DistGEMM.exe $Nnodes 800 8 2
+aprun -n 8 -d 16 -N 1 ./DistGEMM.exe $Nnodes 20 8 2
 
