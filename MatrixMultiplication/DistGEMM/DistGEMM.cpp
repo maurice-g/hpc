@@ -36,7 +36,7 @@ DistGEMM::DistGEMM(int n, int numprocs, int cubes) {
 	MPI_Cart_sub(cart_comm,logv_j,&comm_j);
 	MPI_Cart_sub(cart_comm,logv_k,&comm_k);
 
-        MPI_Comm_rank(MPI_COMM_WORLD,&rank_cart);
+        MPI_Comm_rank(cart_comm,&rank_cart);
 
 	//get and save the new ranks for each communications layer
 	MPI_Comm_rank(comm_i,&rank_i);
