@@ -6,7 +6,7 @@ CXXFLAGS= -O3
 INCLUDE=../HelperClasses/
 
 LIBS=-lrt -openmp
-#DEBUG= -g -DDEBUGOUTPUT -hlist=m 
+DEBUG= -g -DDEBUGOUTPUT -hlist=m 
 
 all: DistGEMM
 

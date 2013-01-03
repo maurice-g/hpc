@@ -99,7 +99,7 @@ void DistGEMM::output_result() {
 		for (int k=0; k<cubeSize; k++) {
 			MPI_Barrier(MPI_COMM_WORLD);
 			// very strange output behaviour: always (0,0) first, other procs in random order
-			if (p_i==i && p_k==k && p_j==0) {
+			if (p_i==i && p_k==k && rank_j==root_j) {
 				std::cout << "output_from(i,k): " << p_i << "," << p_k << std::endl;
 				for (int op=0; op<blocksize*blocksize; op++) {
 					std::cout << C[op] << std::endl;
