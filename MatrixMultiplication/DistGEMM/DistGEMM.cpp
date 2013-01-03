@@ -5,6 +5,7 @@
 #include <cassert>
 #include <cmath>
 #include <iostream>
+#include <fstream>
 
 DistGEMM::DistGEMM(int n, int numprocs, int cubes) {
 	assert(cubes*cubes*cubes == numprocs);	
@@ -134,6 +135,44 @@ void DistGEMM::output_result() {
 			}
 		}
 	}
+	delete[] result;
+}
+
+void readMatrix(std::string filenameA, std::string filenameB) {
+	// reads and stores matrix A blockwise into large array (column major)
+	count_type N=blocksize*blocksize*cubeSize*cubeSize;
+	val_type *matrixA = new val_type[N];
+	val_type line;
+	
+	count_type iblock=0;
+	count_type jblock=0;
+	count_type column=0;
+	count_type op=0;
+	count_type c=0;	
+
+	ifstream inputfileA(filenameA);
+	if (inputfileA.is_open()) {
+		while(inputfileA.good()) {
+			c++;
+			if (++op==blocksize) {
+				op=0;
+				if (++iblock==cubeSize) {
+					iblock=0;
+					if (++column==blocksize) {
+						column=0;
+						if (++jblock==cubeSize) continue;
+					}
+				}
+			}
+			
+			inputfileA >> line;
+			matrixA[blocksize*blocksize*(iblock+cubeSize*jblock)+blocksize*column+op] = line;
+		}
+	}
+
+	else std::cerr << "Error while reading file " << filenameA << std::endl;
+	if (++c != N) std::cerr << "Warning: number of matrix elements given to class (" << N << ") is not equal to number of matrix elements in file " << filenameA << std::endl;
+	
 }
 
 /*
