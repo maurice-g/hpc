@@ -5,6 +5,9 @@
 #include <cassert>
 #include <cmath>
 #include <iostream>
+#include <fstream>
+#include <sstream>
+#include <string>
 
 DistGEMM::DistGEMM(int n, int numprocs, int cubes) {
 	assert(cubes*cubes*cubes == numprocs);	
@@ -93,7 +96,7 @@ void DistGEMM::performGEMM() {
 	MPI_Reduce((rank_j==root_j ? MPI_IN_PLACE : C), C, blocksize*blocksize, mpi_val_type, MPI_SUM, root_j, comm_j);
 }
 
-void DistGEMM::output_result() {
+void DistGEMM::output_result(std::string filename) {
 	MPI_Comm comm_gather;
 	int dims[] = {true,false,true};
 	int my_rank;
@@ -115,23 +118,32 @@ void DistGEMM::output_result() {
 			int coords[] = {i,k};
 			int rank_gather; 
 			MPI_Cart_rank(comm_gather, coords, &rank_gather);
-			displs[rank_gather] = (blocksize*blocksize)*(k+cubeSize*i);
+			displs[rank_gather] = (blocksize*blocksize)*(i+cubeSize*k); //store blocks column major
 		}
 	}
 	
 	MPI_Gatherv(C, blocksize*blocksize, mpi_val_type, result, &recvcounts[0], &displs[0], mpi_val_type, 0, comm_gather);
 	
 	if (my_rank==0) {
-		for (int i=0; i<cubeSize; i++) {
-			for (int line=0; line<blocksize; line++) {
-				for (int k=0; k<cubeSize; k++) {
-				//std::cout << "Output from (i,k): " << i << "," << k << std::endl;
-					for (int op=0; op<blocksize; op++) {
-						std::cout << result[(blocksize*blocksize)*(cubeSize*i+k)+line+blocksize*op] << "\t";
+		std::ofstream outfile;
+		std::stringstream matSizeInfo;
+		matSizeInfo << blocksize*cubeSize;
+		filename += matSizeInfo.str();
+		filename += ".txt";
+		outfile.open(filename.c_str(),std::ios_base::app | std::ios_base::out);
+		if (outfile.is_open()) {
+			for (int i=0; i<cubeSize; i++) {
+				for (int column=0; column<blocksize; column++) {
+					for (int k=0; k<cubeSize; k++) {
+						for (int op=0; op<blocksize; op++) {
+							outfile << result[(blocksize*blocksize)*(cubeSize*k+i)+column*blocksize+op] << "\t";
+						}
 					}
+				outfile << std::endl;
 				}
-			std::cout << std::endl;
 			}
+		} else {
+			std::cout << "Error: file not open\n";
 		}
 	}
 }
