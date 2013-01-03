@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <omp.h>
 #include <mpi.h>
+#include <string>
 int main(int argc, char* argv[]) {
 	if (argc != 4) {
 		std::cerr << "Usage: " << argv[0] << " [matrix dimension] [#procs] [3d topology size]" << std::endl;
@@ -16,7 +17,8 @@ int main(int argc, char* argv[]) {
 	DistGEMM m(N,nprocs,topsize);
 	m.initializeLehmer();
 	m.performGEMM();
-	m.output_result();
+	std::string filename("Msize=");
+	m.output_result(filename);
 	MPI_Finalize();
 	return 0;
 }

@@ -2,6 +2,7 @@
 #define MATRIXMULT
 
 #include <mpi.h>
+#include <string>
 
 /*
 * \brief Class implementing distributed gemm for a n x n matrix
@@ -24,7 +25,8 @@ public:
 	~DistGEMM();
 	void initializeLehmer();					// initialize Lehmer matrix A (where k=0) and B (where i=0)
 	void performGEMM();						// perform the matrix multiplication
-	void output_result();						
+	void output_result(std::string filename);			
+	void readMatrix(std::string filename);						
 
 private:
 	MPI_Comm cart_comm, comm_i, comm_j, comm_k;
