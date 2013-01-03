@@ -1,5 +1,6 @@
 #include "DistGEMM.hpp"
 #include <mpi.h>
+#include <vector>
 #include <libsci_acc.h>
 #include <cassert>
 #include <cmath>
@@ -25,7 +26,6 @@ DistGEMM::DistGEMM(int n, int numprocs, int cubes) {
 	MPI_Dims_create(size,3,nums);
 	//build global communicator, then subdivide into comm_i, comm_j, comm_k
 	int periodic[3] = {0, 0, 0};
-	MPI_Comm cart_comm;
 	MPI_Cart_create(MPI_COMM_WORLD,3,nums,periodic,true,&cart_comm);
 	
 	//assign comm_i, comm_j, comm_k
@@ -94,8 +94,49 @@ void DistGEMM::performGEMM() {
 }
 
 void DistGEMM::output_result() {
+	std::cout << "output0";
+	if (p_j!=0)
+		return;
+	MPI_Comm comm_gather;
+	int dims[] = {true,false,true};
+	int my_rank;
+	MPI_Cart_sub(cart_comm,dims,&comm_gather);
+	MPI_Comm_rank(comm_gather, &my_rank);
+	std::cout << "output1" << std::endl;
+	val_type *result;
+	if (my_rank==0) // the proc receiving all data
+		result=new val_type[blocksize*blocksize*cubeSize*cubeSize];
+	
+	std::vector<int> recvcounts(cubeSize*cubeSize, blocksize*blocksize);
+	std::vector<int> displs(cubeSize*cubeSize, 0);
+	for (count_type i=0; i<cubeSize; i++) {
+		for (count_type k=0; k<cubeSize; k++) {
+			int coords[] = {i,k};
+			int rank_gather; 
+			MPI_Cart_rank(comm_gather, coords, &rank_gather);
+			displs[rank_gather] = (blocksize*blocksize)*(k+cubeSize*i);
+		}
+	}
+	std::cout << "output2" << std::endl;
+	MPI_Gatherv(C, blocksize*blocksize, mpi_val_type, result, &recvcounts[0], &displs[0], mpi_val_type, 0, comm_gather);
+	std::cout << "output3" << std::endl;
+	if (my_rank==0) {
+		for (int i=0; i<cubeSize; i++) {
+			for (int k=0; k<cubeSize; k++) {
+				std::cout << "Output from (i,k): " << i << "," << k << std::endl;
+				for (int op=0; op<blocksize*blocksize; op++) {
+					std::cout << result[(blocksize*blocksize)*(k+cubeSize*i)] << std::endl;
+				}
+			}
+		}
+	}
+}
+
+/*
+void DistGEMM::output_result() {
 	MPI_Barrier(MPI_COMM_WORLD);
 	for (int i=0; i<cubeSize; i++) {
+		MPI_Barrier(MPI_COMM_WORLD);
 		for (int k=0; k<cubeSize; k++) {
 			MPI_Barrier(MPI_COMM_WORLD);
 			// very strange output behaviour: always (0,0) first, other procs in random order
@@ -108,7 +149,7 @@ void DistGEMM::output_result() {
 		}
 	}
 }
-			
+*/			
 
 DistGEMM::~DistGEMM() {
 	libsci_acc_FreeHost(A);

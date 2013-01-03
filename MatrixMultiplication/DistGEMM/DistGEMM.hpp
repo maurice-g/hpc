@@ -27,7 +27,7 @@ public:
 	void output_result();						
 
 private:
-	MPI_Comm	comm_i, comm_j, comm_k;
+	MPI_Comm cart_comm, comm_i, comm_j, comm_k;
 	int rank_cart,rank_i,rank_j,rank_k;				// the rank of each communicator
 	val_type *A, *B, *C;
 

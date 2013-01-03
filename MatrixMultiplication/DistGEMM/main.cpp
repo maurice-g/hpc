@@ -16,7 +16,7 @@ int main(int argc, char* argv[]) {
 	DistGEMM m(N,nprocs,topsize);
 	m.initializeLehmer();
 	m.performGEMM();
-	m.output_result();
+	//m.output_result();
 	MPI_Finalize();
 	return 0;
 }
