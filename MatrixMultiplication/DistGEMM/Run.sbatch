@@ -1,10 +1,10 @@
 #!/bin/bash -l
 #SBATCH --job-name="test"
-#SBATCH --nodes=8
-#SBATCH --time=00:00:20
+#SBATCH --nodes=27
+#SBATCH --time=00:02:00
 #SBATCH --output="testoutput.txt"
 #SBATCH --error="errorlog.txt"
 echo "Nodes on which it executes"
 echo $SLURM_JOB_NODELIST
-aprun -n 8 -d 16 -N 1 ./DistGEMM.exe $Nnodes 20 8 2
+aprun -n 27 -d 16 -N 1 ./DistGEMM.exe 3000 27 3
 

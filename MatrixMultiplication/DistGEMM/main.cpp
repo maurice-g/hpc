@@ -15,7 +15,10 @@ int main(int argc, char* argv[]) {
 	int topsize = std::atoi(argv[3]);	//size of 3dtopology: topsize x topsize x topsize
 	
 	DistGEMM m(N,nprocs,topsize);
-	m.initializeLehmer();
+	std::string matrixA("matrixA.in");
+	std::string matrixB("matrixB.in");
+	m.setup(matrixA, matrixB);
+	//m.initializeLehmer();
 	m.performGEMM();
 	std::string filename("Msize=");
 	m.output_result(filename);

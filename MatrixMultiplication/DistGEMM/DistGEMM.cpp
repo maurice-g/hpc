@@ -6,11 +6,8 @@
 #include <cmath>
 #include <iostream>
 #include <fstream>
-<<<<<<< HEAD
-=======
 #include <sstream>
 #include <string>
->>>>>>> 9db21609eb1052cb69302d8a2ecc81b15ee4f14b
 
 DistGEMM::DistGEMM(int n, int numprocs, int cubes) {
 	assert(cubes*cubes*cubes == numprocs);	
@@ -110,7 +107,7 @@ void DistGEMM::output_result(std::string filename) {
 	if (p_j!=0)
 		return;
 	
-	val_type *result;
+	val_type *result=0x0;
 	if (my_rank==0) // the proc receiving all data
 		result=new val_type[blocksize*blocksize*cubeSize*cubeSize];
 	
@@ -135,27 +132,26 @@ void DistGEMM::output_result(std::string filename) {
 		filename += ".txt";
 		outfile.open(filename.c_str(),std::ios_base::app | std::ios_base::out);
 		if (outfile.is_open()) {
-			for (int i=0; i<cubeSize; i++) {
+			for (int k=0; k<cubeSize; k++) {
 				for (int column=0; column<blocksize; column++) {
-					for (int k=0; k<cubeSize; k++) {
+					for (int i=0; i<cubeSize; i++) {
 						for (int op=0; op<blocksize; op++) {
-							outfile << result[(blocksize*blocksize)*(cubeSize*k+i)+column*blocksize+op] << "\t";
+							outfile << result[(blocksize*blocksize)*(cubeSize*k+i)+column*blocksize+op] << "\n";
 						}
 					}
-				outfile << std::endl;
 				}
 			}
 		} else {
 			std::cout << "Error: file not open\n";
 		}
+		outfile.close();
 	}
 	delete[] result;
 }
 
-void readMatrix(std::string filenameA, std::string filenameB) {
-	// reads and stores matrix A blockwise into large array (column major)
+void DistGEMM::readMatrix(std::string filename, val_type *matrix) {
+	// reads and stores matrix blockwise into large array (column major)
 	count_type N=blocksize*blocksize*cubeSize*cubeSize;
-	val_type *matrixA = new val_type[N];
 	val_type line;
 	
 	count_type iblock=0;
@@ -164,29 +160,86 @@ void readMatrix(std::string filenameA, std::string filenameB) {
 	count_type op=0;
 	count_type c=0;	
 
-	ifstream inputfileA(filenameA);
-	if (inputfileA.is_open()) {
-		while(inputfileA.good()) {
+	std::ifstream inputfile(filename.c_str());
+	if (inputfile.is_open()) {
+		while(inputfile.good()) {
 			c++;
-			if (++op==blocksize) {
-				op=0;
-				if (++iblock==cubeSize) {
-					iblock=0;
-					if (++column==blocksize) {
-						column=0;
-						if (++jblock==cubeSize) continue;
-					}
-				}
-			}
 			
-			inputfileA >> line;
-			matrixA[blocksize*blocksize*(iblock+cubeSize*jblock)+blocksize*column+op] = line;
+			inputfile >> line;
+			matrix[blocksize*blocksize*(iblock+cubeSize*jblock)+blocksize*column+op] = line;
+                        
+			if (++op==blocksize) {
+                                op=0;
+                                if (++iblock==cubeSize) {
+                                        iblock=0;
+                                        if (++column==blocksize) {
+                                                column=0;
+                                                if (++jblock==cubeSize) break;
+                                        }
+                                }
+                        }
 		}
 	}
 
-	else std::cerr << "Error while reading file " << filenameA << std::endl;
-	if (++c != N) std::cerr << "Warning: number of matrix elements given to class (" << N << ") is not equal to number of matrix elements in file " << filenameA << std::endl;
+	else std::cerr << "Error while reading file " << filename << std::endl;
+	if (c != N) std::cerr << "Warning: number of matrix elements given to class (" << N << ") is not equal to number of matrix elements in file " << filename << "(" << c << ")" << std::endl;
+	inputfile.close();
+}
+
+void DistGEMM::setup(std::string filenameA, std::string filenameB) {
+	count_type N = blocksize*blocksize*cubeSize*cubeSize;
+	MPI_Request *reqs_send_A=new MPI_Request[cubeSize*cubeSize];
+	MPI_Status *status_send_A=new MPI_Status[cubeSize*cubeSize];
+        MPI_Request *reqs_send_B=new MPI_Request[cubeSize*cubeSize];
+	MPI_Status *status_send_B=new MPI_Status[cubeSize*cubeSize];
+	val_type *matrixA, *matrixB;
+	matrixA=0x0;
+	matrixB=0x0;
 	
+	if (rank_cart==0) {
+		// reads matrix A 
+		matrixA = new val_type[N];
+		readMatrix(filenameA, matrixA);
+		
+		for (count_type i=0; i<cubeSize; i++) {
+			for (count_type j=0; j<cubeSize; j++) {
+				int coords[] = {i,j,0};
+				int sendTo;
+				MPI_Cart_rank(cart_comm, coords, &sendTo);
+				MPI_Isend(&matrixA[(blocksize*blocksize)*(cubeSize*j+i)], blocksize*blocksize, mpi_val_type, sendTo, 0, cart_comm, &reqs_send_A[i*cubeSize+j]);
+			}
+		}
+	}
+	
+	if (rank_cart==1) {
+                // reads matrix B
+                matrixB = new val_type[N];
+                readMatrix(filenameB, matrixB);
+
+                for (count_type j=0; j<cubeSize; j++) {
+                        for (count_type k=0; k<cubeSize; k++) {
+                                int coords[] = {0,j,k};
+                                int sendTo;
+                                MPI_Cart_rank(cart_comm, coords, &sendTo);
+                                MPI_Isend(&matrixB[(blocksize*blocksize)*(cubeSize*k+j)], blocksize*blocksize, mpi_val_type, sendTo, 0, cart_comm, &reqs_send_B[j*cubeSize+k]);
+                        }
+                }
+        }
+	
+	MPI_Request reqs_recv_A, reqs_recv_B;
+	MPI_Status status_recv_A, status_recv_B;
+
+	if (p_k==0) MPI_Irecv(A, blocksize*blocksize, mpi_val_type, 0, 0, cart_comm, &reqs_recv_A);
+	if (p_i==0) MPI_Irecv(B, blocksize*blocksize, mpi_val_type, 1, 0, cart_comm, &reqs_recv_B);
+
+	if (rank_cart==0) MPI_Waitall(cubeSize*cubeSize, &reqs_send_A[0], &status_send_A[0]);
+	if (rank_cart==1) MPI_Waitall(cubeSize*cubeSize, &reqs_send_B[0], &status_send_B[0]);
+	if (p_k==0) MPI_Waitall(1, &reqs_recv_A, &status_recv_A);
+	if (p_i==0) MPI_Waitall(1, &reqs_recv_B, &status_recv_B);
+
+	delete[] reqs_send_A, status_send_A, reqs_send_B, status_send_B, matrixA, matrixB;
+	
+	MPI_Barrier(MPI_COMM_WORLD);
 }
 
 /*

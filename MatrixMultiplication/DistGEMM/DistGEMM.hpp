@@ -26,7 +26,8 @@ public:
 	void initializeLehmer();					// initialize Lehmer matrix A (where k=0) and B (where i=0)
 	void performGEMM();						// perform the matrix multiplication
 	void output_result(std::string filename);			
-	void readMatrix(std::string filename);						
+	void readMatrix(std::string filename, val_type *matrix);
+	void setup(std::string filenameA, std::string filenameB);						
 
 private:
 	MPI_Comm cart_comm, comm_i, comm_j, comm_k;
