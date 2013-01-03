@@ -94,15 +94,16 @@ void DistGEMM::performGEMM() {
 }
 
 void DistGEMM::output_result() {
-	std::cout << "output0";
-	if (p_j!=0)
-		return;
 	MPI_Comm comm_gather;
 	int dims[] = {true,false,true};
 	int my_rank;
+	
 	MPI_Cart_sub(cart_comm,dims,&comm_gather);
 	MPI_Comm_rank(comm_gather, &my_rank);
-	std::cout << "output1" << std::endl;
+	
+	if (p_j!=0)
+		return;
+	
 	val_type *result;
 	if (my_rank==0) // the proc receiving all data
 		result=new val_type[blocksize*blocksize*cubeSize*cubeSize];
@@ -117,16 +118,19 @@ void DistGEMM::output_result() {
 			displs[rank_gather] = (blocksize*blocksize)*(k+cubeSize*i);
 		}
 	}
-	std::cout << "output2" << std::endl;
+	
 	MPI_Gatherv(C, blocksize*blocksize, mpi_val_type, result, &recvcounts[0], &displs[0], mpi_val_type, 0, comm_gather);
-	std::cout << "output3" << std::endl;
+	
 	if (my_rank==0) {
 		for (int i=0; i<cubeSize; i++) {
-			for (int k=0; k<cubeSize; k++) {
-				std::cout << "Output from (i,k): " << i << "," << k << std::endl;
-				for (int op=0; op<blocksize*blocksize; op++) {
-					std::cout << result[(blocksize*blocksize)*(k+cubeSize*i)] << std::endl;
+			for (int line=0; line<blocksize; line++) {
+				for (int k=0; k<cubeSize; k++) {
+				//std::cout << "Output from (i,k): " << i << "," << k << std::endl;
+					for (int op=0; op<blocksize; op++) {
+						std::cout << result[(blocksize*blocksize)*(cubeSize*i+k)+line+blocksize*op] << "\t";
+					}
 				}
+			std::cout << std::endl;
 			}
 		}
 	}
