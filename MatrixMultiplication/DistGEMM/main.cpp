@@ -28,18 +28,21 @@ int main(int argc, char* argv[]) {
 	//m.setup(matrixA, matrixB);
 	m.initializeLehmer();
 	MPI_Barrier(MPI_COMM_WORLD);
-	Timer _t(1);
+//	Timer _t(1);
+	double t1 = MPI_Wtime();
 	m.performGEMM();
 	MPI_Barrier(MPI_COMM_WORLD);
-	_t.stop();
-	Measurement mes("DistGEMM benchmark", N, N, _t.elapsed_s());
+//	_t.stop();
+	double t2 = MPI_Wtime();
+	double t = t2-t1;
+	Measurement mes("DistGEMM benchmark", N, N, t);
 
 	int rank;
 	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
 	if (rank==0) {
 		std::stringstream ss;
-		ss << "benchmark-" << topsize << "x" << topsize << "x" << topsize << ".mes";	
+		ss << "benchmark-MPIWtime" << topsize << "x" << topsize << "x" << topsize << ".mes";	
 		std::ofstream mesFile(ss.str().c_str(), std::ios::in | std::ios::app);
 		mesFile << mes;
 		mesFile.close();

@@ -14,7 +14,7 @@
 int main() {
 
 	typedef hpc12::matrix<double,hpc12::column_major> matrix_type;
-	for (int N = 512;N < 10000;N*=2) {
+	for (int N = 512;N < 15000;N+=512) {
 		matrix_type A(N,N);
 		matrix_type B(N,N);
 		matrix_type C(N,N);

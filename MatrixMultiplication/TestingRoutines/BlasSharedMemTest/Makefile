@@ -33,8 +33,10 @@ cublas: dgemm_cublas.cu
 	nvcc $(CXXFLAGS) -I$(INCLUDE) -lcublas dgemm_cublas.cu -o dgemm_cublas_$(PRGENV).exe -lrt -O3
 
 cublas_pinned: dgemm_cublas_hostalloc.cu
-	nvcc $(CXXFLAGS) -I$(INCLUDE) -lcublas dgemm_cublas_hostalloc.cu -o dgemm_cublas_hostalloc_$(PRGENV).exe -lrt -O3
+	nvcc $(CXXFLAGS) -I$(INCLUDE) -lcublas dgemm_cublas_hostalloc.cu -o dgemm_cublas_hostalloc_$(PRGENV).exe -lrt
 
+cublas_pinned_et: dgemm_cublas_hostalloc_cudaEventtiming.cu
+	nvcc $(CXXFLAGS) -I$(INCLUDE) -lcublas dgemm_cublas_hostalloc_cudaEventtiming.cu -o dgemm_cublas_hostalloc_$(PRGENV).exe -lrt
 #.PHONY:helpers
 #helpers:
 #	cd $(INCLUDE) && make

@@ -25,7 +25,7 @@
 int main() {
 	std::cout << "performance  of cublas dgemm using pinned memory \n";
 	typedef hpc12::matrix<double,hpc12::column_major> matrix_type;
-	for (int N = 512;N < 10000;N*=2) {
+	for (int N = 512;N < 15000;N+=512) {
 		matrix_type A(N,N);
 		matrix_type B(N,N);
 		matrix_type C(N,N);
@@ -79,7 +79,7 @@ int main() {
 		cudaEventElapsedTime(&elapsed_time,start,stop);elapsed=elapsed_time;
 		
 		//craaazy bug: try double(N*N*N)/(elapsed*0.001) ---> result is 0 WTF??
-		std::cout << N << " runtime: "<< elapsed  << " peak FLOPS without copying data: " << double(N)*double(N)*double(N)/(elapsed*0.001) <<"\n";
+		std::cout << N << " runtime: "<< elapsed  << " peak FLOPS without copying data: " << 2*double(N)*double(N)*double(N)/(elapsed*0.001) <<"\n";
 		
 
 		cudaMemcpy(h_C,d_C,N*N*sizeof(double),cudaMemcpyDeviceToHost);		
