@@ -27,7 +27,7 @@ class Measurement {
 					m_(m),
 					n_(n),
 					runtime_(runtime) {
-					flops_ = m*n*m / runtime_;	//change this to the exact value
+					flops_ = 2*m*n*m / runtime_;	//change this to the exact value
 					};
 	
 	
