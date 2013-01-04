@@ -5,6 +5,8 @@
 #include <omp.h>
 #include <mpi.h>
 #include <string>
+#include <fstream>
+#include <sstream>
 #include "DistGEMM.hpp"
 
 int main(int argc, char* argv[]) {
@@ -25,12 +27,23 @@ int main(int argc, char* argv[]) {
 	
 	//m.setup(matrixA, matrixB);
 	m.initializeLehmer();
+	MPI_Barrier(MPI_COMM_WORLD);
 	Timer _t(1);
 	m.performGEMM();
-	MPI_Barrier();
+	MPI_Barrier(MPI_COMM_WORLD);
 	_t.stop();
-	Measurement mes("Distribution & DGEMM (libsci) operation", N, N, _t.elapsed_s());
-	std::cout << mes; 
+	Measurement mes("DistGEMM benchmark", N, N, _t.elapsed_s());
+
+	int rank;
+	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+	if (rank==0) {
+		std::stringstream ss;
+		ss << "benchmark-" << topsize << "x" << topsize << "x" << topsize << ".mes";	
+		std::ofstream mesFile(ss.str().c_str(), std::ios::in | std::ios::app);
+		mesFile << mes;
+		mesFile.close();
+	}
 	//std::string filename("Msize=");
 	//m.output_result(filename);
 	MPI_Finalize();
