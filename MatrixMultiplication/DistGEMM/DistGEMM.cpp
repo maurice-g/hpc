@@ -83,16 +83,30 @@ void DistGEMM::initializeLehmer() {
 }
 
 void DistGEMM::performGEMM() {
+
+	//try the new MPI 3 nonblocking broadcast (MPIX_Ibcast)
+	//every rank gets 2 messages -> 2 requests/status  per rank
+	#ifdef NONBLOCKINGBCAST
+	MPI_Request req[2];
+	MPI_Status stat[2];
+	MPIX_Ibcast(A,blocksize*blocksize,mpi_val_type,root_k,comm_k,&req[0]);
+	MPIX_Ibcast(B,blocksize*blocksize,mpi_val_type,root_i,comm_i,&req[1]);
+	MPI_Waitall(2,req,stat);
+	#endif
+
+	#ifndef NONBLOCKINGBCAST
 	// send root_k's matrix A to all other processors in communicator comm_k
 	MPI_Bcast(A, blocksize*blocksize, mpi_val_type, root_k, comm_k);
 	// send root_i's Matrix B to all other processors in communicator comm_i
 	MPI_Bcast(B, blocksize*blocksize, mpi_val_type, root_i, comm_i);
-	
+	#endif
+
 	char transA = 'N';
 	double alpha = 1.;
 	double beta = 0.;
 	
 	dgemm(transA, transA, blocksize, blocksize, blocksize, alpha, A, blocksize, B, blocksize, beta, C, blocksize);
+	
 	MPI_Reduce((rank_j==root_j ? MPI_IN_PLACE : C), C, blocksize*blocksize, mpi_val_type, MPI_SUM, root_j, comm_j);
 }
 

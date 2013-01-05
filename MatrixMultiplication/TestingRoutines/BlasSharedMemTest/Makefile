@@ -22,6 +22,10 @@ libsci: dgemm_libsci.cpp
 libsci-acc: dgemm_libsci_acc.cpp
 	$(CXX) $(CXXFLAGS) -I$(INCLUDE) dgemm_libsci_acc.cpp $(LIBS) -o dgemm_libsci_acc_$(PRGENV).exe
 
+libsci-acc-huge: dgemm_libsci_acc.cpp
+
+	$(CXX) $(CXXFLAGS) -I$(INCLUDE) dgemm_libsci_acc.cpp $(LIBS) -lhugetlbfs -o dgemm_libsci_acc_$(PRGENV)_huge.exe
+
 
 acml: dgemm_acml.cpp
 	$(CXX) $(CXXFLAGS) -I$(INCLUDE) dgemm_acml.cpp $(LIBS) -o dgemm_acml_$(PRGENV).exe

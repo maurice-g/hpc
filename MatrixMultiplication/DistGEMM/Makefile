@@ -7,7 +7,7 @@ INCLUDE=../HelperClasses/
 
 LIBS=-lrt -openmp
 #DEBUG= -g -DDEBUGOUTPUT -hlist=m 
-
+NONBLOCK = -DNONBLOCKINGBCAST
 all: DistGEMM
 
 DistGEMM: main.o DistGemm.o
@@ -17,7 +17,7 @@ main.o : main.cpp DistGEMM.cpp
 	$(CXX) $(DEBUG) $(CXXFLAGS) -c -I$(INCLUDE) main.cpp -o main.o
 
 DistGemm.o: DistGEMM.cpp DistGEMM.hpp
-	$(CXX) $(DEBUG) $(CXXFLAGS) -c -I$(INCLUDE) $(LIBS) DistGEMM.cpp -o DistGemm.o
+	$(CXX) $(DEBUG) $(NONBLOCK) $(CXXFLAGS) -c -I$(INCLUDE) $(LIBS) DistGEMM.cpp -o DistGemm.o
 
 clean:
 	rm -rf *.exe
