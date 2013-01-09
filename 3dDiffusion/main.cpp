@@ -11,8 +11,19 @@ int main(int argc, char ** argv) {
 	MPI_Comm_rank(MPI_COMM_WORLD,&rank);
 	if (rank==0) {
 		Vector3d<double> V(3,3,3);
-		std::cout << V;
 	}
+	double dx = 0.1;
+	unsigned int nx = 10;
+	unsigned int ny = 10;
+	unsigned int nz = 10;
+	double D = 1.;
+	double T = 1.;
+	Diffusion3D::coord_type a = {0,0,1};
+	Diffusion3D::coord_type b = {1,1,0}; 
+	
+	Diffusion3D Simulation(dx,nx,ny,nz,a,b,D,T);
+	
+	
 	
 	MPI_Finalize();
 	return 0;

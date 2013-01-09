@@ -25,7 +25,7 @@ class Diffusion3D {
  	
 
 		typedef double val_type;
-		typedef std::size_t count_type;
+		typedef unsigned int  count_type;
 		typedef Vector3d<val_type> domain3d_type; 		//todo: create a better type using aligned allocators, s.t. A(1,2,3) is possible etc.
 		typedef int coord_type[3];						//std::array is c++11 --> no cray/pgi compiler support
 		#define mpi_val_type MPI_DOUBLE
@@ -42,9 +42,10 @@ class Diffusion3D {
 	 	* @param b is the (back,right,top) corner of the rectangular domain
 	 	* @param D is the diffusion constant to be used
 	 	* @param T is the wanted end-time of the simulation
+	 	* @param topology is an array which holds the number of nodes in (x,y,z) directions
 	 	*/
-		Diffusion3D(val_type dx, val_type nx, val_type ny, val_type nz,
-					coord_type a, coord_type b,
+		Diffusion3D(val_type dx, count_type nx, count_type ny, count_type nz,
+					coord_type a, coord_type b,coord_type topology
 					val_type D, val_type T);
 					
 		/*!
@@ -79,7 +80,7 @@ class Diffusion3D {
 		
 		
 		// numerical parameters
-		val_type 	dt_; 				// timestep
+		val_type 	dt_; 				// timestep, determine via stability condition(see master solution)
 		val_type 	dx_;				// meshwidth, uniform in all directions
 		
 		
@@ -124,11 +125,14 @@ class Diffusion3D {
 		//maybe add MPI_Request, MPI_Status -->don't create them every iteration
 		
 		//-----------------------private functions------------------------
-		//todo: private functions like initial config, b.c. etc
+		
 
 
-
-
+		void set_initial_conditions();
+		
+		void set_boundary_conditions();
+		
+		void FTCS();					//forward time, central space stencil
 
 
 
