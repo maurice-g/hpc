@@ -133,7 +133,7 @@ class Diffusion3D {
 
 
 
-};
+}
 
 
 #endif
