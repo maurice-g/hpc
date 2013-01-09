@@ -44,7 +44,7 @@ class Vector3d {
 					return data_[i + size_X_*j + size_X_*size_Y_*k];
 					}
 		
-		val_type const& operator()(unsigned int i, unsigned int j, unsigned int k) {
+		val_type const& operator()(unsigned int i, unsigned int j, unsigned int k) const {
 					assert(i < size_X_);
 					assert(j < size_Y_);
 					assert(k < size_Z_);
@@ -65,7 +65,18 @@ class Vector3d {
 // A nice output function: Output x,y-plane(k=0) first, than k++
 template <class T, class Allocator>
 std::ostream & operator << (std::ostream &os, Vector3d<T,Allocator>  const& v) {
-
+	os <<"#           		^                    \n" // after trial and error...
+	   <<"#		    (y) |	                 \n"
+	   <<"#			|  /				 \n"
+	   <<"#			| / 				 \n"
+	   <<"#			|/					 \n"
+	   <<"#		  ------/----------> (x)     \n"
+	   <<"#		       /|					 \n"
+	   <<"#                     / |					 \n"
+	   <<"#                    /  |					 \n"
+	   <<"#                   /   |					 \n"
+	   <<"#	    (z)    v                    \n\n\n";
+		
 	for (unsigned int k = 0; k < v.get_sizeZ();k++) {
 		os << "Next level: k=" << k <<"\n";
 		for (unsigned int j = 0; j < v.get_sizeY();j++) {

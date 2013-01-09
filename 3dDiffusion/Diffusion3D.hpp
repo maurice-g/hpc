@@ -12,7 +12,7 @@
 #include <iostream>
 #include <sstream>
 #include <fstream>
-
+#include <Vector3d.hpp>
 
 /*
 * \class Diffusion3D
@@ -26,7 +26,7 @@ class Diffusion3D {
 
 		typedef double val_type;
 		typedef std::size_t count_type;
-		typedef std::vector<val_type> domain3d_type; 		//todo: create a better type using aligned allocators, s.t. A(1,2,3) is possible etc.
+		typedef Vector3d<val_type> domain3d_type; 		//todo: create a better type using aligned allocators, s.t. A(1,2,3) is possible etc.
 		typedef int coord_type[3];						//std::array is c++11 --> no cray/pgi compiler support
 		#define mpi_val_type MPI_DOUBLE
 	
