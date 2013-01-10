@@ -55,6 +55,16 @@ class Vector3d {
 		unsigned int get_sizeY () const { return size_Y_;}
 		unsigned int get_sizeZ () const { return size_Z_;}
 				 
+		void resize(unsigned int Nx,unsigned int Ny, unsigned int Nz, val_type value=0) { 
+				assert(Nx >0);
+				assert(Ny > 0);
+				assert(Nz > 0);
+				data_.resize(Nx*Ny*Nz,value);
+				size_X_ = Nx;
+				size_Y_ = Ny;
+				size_Z_ = Nz;
+		}
+				 
 	
 	private:
 		std::vector<val_type,Allocator> data_;

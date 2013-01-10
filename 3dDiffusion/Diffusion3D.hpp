@@ -63,10 +63,10 @@ class Diffusion3D {
 		* This function writes the content of density into a file
 		* @param filename is the name of the desired output-file
 		*/
-		void print_density (std::string filename);
+		void print_density (std::string filename) const ;
 		
 		
-		
+		void write_debug_info(std::ostream &os) const;		//use this to write everything about object to ostream
 		
 		
 		
@@ -98,12 +98,12 @@ class Diffusion3D {
 		
 		//---------------------------variables which have rank specific  values -------------
 		
-		domain3d_type density,			//the densities of each gridpoint are stored in here
-					  density_old;
+		domain3d_type density_,			//the densities of each gridpoint are stored in here
+					  density_old_;
 		//MPI Stuff
 		int 		rank_;
 		int 		size_;
-		int 		cartesian_coords[3];	
+		int 		cartesian_coords_[3];	
 		
 		count_type	local_nx_,
 					local_ny_,

@@ -23,7 +23,7 @@ int main(int argc, char ** argv) {
 	Diffusion3D::coord_type b = {1,1,0}; 
 	
 	Diffusion3D Simulation(dx,nx,ny,nz,a,b,topology,D,T);
-	
+	Simulation.write_debug_info(std::cout);
 	
 	
 	MPI_Finalize();
