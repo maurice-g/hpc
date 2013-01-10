@@ -40,12 +40,12 @@ class Diffusion3D {
 	 	* @param nz is the number of meshpoints in z direction 
 	 	* @param a is the (front,left,bottom) corner of the rectangular domain. a&b together define the domain
 	 	* @param b is the (back,right,top) corner of the rectangular domain
+	    * @param topology is an array which holds the number of nodes in (x,y,z) directions
 	 	* @param D is the diffusion constant to be used
 	 	* @param T is the wanted end-time of the simulation
-	 	* @param topology is an array which holds the number of nodes in (x,y,z) directions
 	 	*/
 		Diffusion3D(val_type dx, count_type nx, count_type ny, count_type nz,
-					coord_type a, coord_type b,coord_type topology
+					coord_type a, coord_type b, coord_type topology,
 					val_type D, val_type T);
 					
 		/*!

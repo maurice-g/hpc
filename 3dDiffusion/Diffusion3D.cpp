@@ -1,6 +1,7 @@
 #include "Diffusion3D.hpp"
 #include <mpi.h>
 #include <cassert>
+#include <iostream>
 
 //constructor
 Diffusion3D::Diffusion3D(val_type dx, count_type nx, count_type ny, count_type nz, coord_type a, coord_type b,coord_type topology,val_type D, val_type T):
@@ -8,6 +9,7 @@ Diffusion3D::Diffusion3D(val_type dx, count_type nx, count_type ny, count_type n
 						global_nx_(nx),global_ny_(ny),global_nz_(nz)
 {
 	
+	std::cout << "Constructor Called\n";
 	//check # nodes vs mesh points: each node has the same number of meshpoints!
 	assert(nx % topology[0] == 0);
 	assert(ny % topology[1] == 0);
@@ -22,4 +24,10 @@ Diffusion3D::Diffusion3D(val_type dx, count_type nx, count_type ny, count_type n
 	
 
 
+}
+
+Diffusion3D::~Diffusion3D() {
+	//free mpi types!
+	std::cout << "Destructor Called\n";
+	
 }

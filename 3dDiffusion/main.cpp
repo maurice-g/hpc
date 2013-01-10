@@ -16,12 +16,13 @@ int main(int argc, char ** argv) {
 	unsigned int nx = 10;
 	unsigned int ny = 10;
 	unsigned int nz = 10;
+	Diffusion3D::coord_type topology = {2,2,2};	//a 2x2x2 mesh
 	double D = 1.;
 	double T = 1.;
 	Diffusion3D::coord_type a = {0,0,1};
 	Diffusion3D::coord_type b = {1,1,0}; 
 	
-	Diffusion3D Simulation(dx,nx,ny,nz,a,b,D,T);
+	Diffusion3D Simulation(dx,nx,ny,nz,a,b,topology,D,T);
 	
 	
 	

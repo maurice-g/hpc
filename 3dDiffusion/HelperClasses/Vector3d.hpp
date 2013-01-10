@@ -23,8 +23,8 @@ class Vector3d {
 		* @param y is the size of the domain in y-direction 
 		* @param z is the size of the domain in y-direction 
 		*/
-		explicit Vector3d (unsigned int x, unsigned int y, unsigned int z) 
-				 : data_(x*y*z,0),
+		explicit Vector3d (unsigned int x=0, unsigned int y=0, unsigned int z=0) //default parameters (0) are necessary,else compiler complains when calling the
+				 : data_(x*y*z,0),												 //constructor of a class where Vector3d is a member
 				 size_X_(x),size_Y_(y),size_Z_(z)
 				 {}
 		
