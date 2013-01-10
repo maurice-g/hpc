@@ -26,26 +26,24 @@ class Diffusion3D {
 
 		typedef double val_type;
 		typedef unsigned int  count_type;
-		typedef Vector3d<val_type> domain3d_type; 		//todo: create a better type using aligned allocators, s.t. A(1,2,3) is possible etc.
+		typedef D3::Vector3d<val_type> domain3d_type; 		//todo: create a better type using aligned allocators, s.t. A(1,2,3) is possible etc.
 		typedef int coord_type[3];						//std::array is c++11 --> no cray/pgi compiler support
 		#define mpi_val_type MPI_DOUBLE
 	
 		//todo: public functions: Constructor, Destructor, Run, write..
 		
 	 	/*!
-	 	* Constructor,
+	 	* Constructor: The simulation will be performed on the domain [0,nx*dx] x [0,ny*dx] x [0,nz*dz]
 	 	* @param dx is the meshwidth of the mesh (uniform in all directions)
 	 	* @param nx is the number of meshpoints in x direction
 	 	* @param ny is the number of meshpoints in y direction 
 	 	* @param nz is the number of meshpoints in z direction 
-	 	* @param a is the (front,left,bottom) corner of the rectangular domain. a&b together define the domain
-	 	* @param b is the (back,right,top) corner of the rectangular domain
 	    * @param topology is an array which holds the number of nodes in (x,y,z) directions
 	 	* @param D is the diffusion constant to be used
 	 	* @param T is the wanted end-time of the simulation
 	 	*/
 		Diffusion3D(val_type dx, count_type nx, count_type ny, count_type nz,
-					coord_type a, coord_type b, coord_type topology,
+					coord_type topology,
 					val_type D, val_type T);
 					
 		/*!
@@ -88,7 +86,7 @@ class Diffusion3D {
 		//(global) domain specific parameters
 		val_type 	global_lengthx_,
 				 	global_lengthy_,
-				 	global_lengthz_; 	// size of global domain
+				 	global_lengthz_; 	// size of global domain: [0,globalx]x[0,globaly]x[0,globalnz]
 		
 		count_type  global_nx_,
 					global_ny_,

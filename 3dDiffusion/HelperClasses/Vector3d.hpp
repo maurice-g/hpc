@@ -8,6 +8,8 @@
 #include "aligned_allocator.hpp"
 #include <cassert>
 
+namespace D3 {
+
 /*
 * \class Vector3d
 * \brief Class implementing a 3d-vector (possibly aligned), which grants acces with (,,) operator
@@ -64,6 +66,14 @@ class Vector3d {
 				size_Y_ = Ny;
 				size_Z_ = Nz;
 		}
+		
+		friend void swap(Vector3d & A, Vector3d & B) {
+			using std::swap;
+			swap(A.data_,B.data_);
+			swap(A.size_X_,B.size_X_);
+			swap(A.size_Y_,B.size_Y_);
+			swap(A.size_Z_,B.size_Z_);
+		}
 				 
 	
 	private:
@@ -72,7 +82,7 @@ class Vector3d {
 		
 };
 
-// A nice output function: Output x,y-plane(k=0) first, than k++
+//  Output x,y-plane(k=0) first, than k++
 template <class T, class Allocator>
 std::ostream & operator << (std::ostream &os, Vector3d<T,Allocator>  const& v) {
 	os <<"#           		^                    \n" // after trial and error...
@@ -102,4 +112,6 @@ std::ostream & operator << (std::ostream &os, Vector3d<T,Allocator>  const& v) {
 	return os;
 }
 
+
+}
 #endif
