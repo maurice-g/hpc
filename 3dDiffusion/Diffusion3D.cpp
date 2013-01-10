@@ -2,6 +2,7 @@
 #include <mpi.h>
 #include <cassert>
 #include <iostream>
+#include <omp.h>
 
 //constructor
 Diffusion3D::Diffusion3D(val_type dx, count_type nx, count_type ny, count_type nz,coord_type topology,val_type D, val_type T):
@@ -16,11 +17,80 @@ Diffusion3D::Diffusion3D(val_type dx, count_type nx, count_type ny, count_type n
 	assert(ny % topology[1] == 0);
 	assert(nz % topology[2] == 0);
 	
+	for (unsigned int i =0;i<3;i++)
+		topology_[i] = topology[i];
 	
 	
 	dt_ = dx_*dx_/(6*D);	// dt < dx^2 /(4*D) for stability of FTCS
 
-	density_.resize(2,2,2,0);
+
+	
+	//determine local # meshpoints, +2 because of ghost cells in each direction
+	local_nx_ = global_nx_/topology_[0] + 2;
+	local_ny_ = global_ny_/topology_[1] + 2;
+	local_nz_ = global_nz_/topology_[2] + 2;
+	
+
+	
+	setup_MPI_stuff();
+	
+	density_.resize(local_nx_,local_ny_,local_nz_,0);
+	density_old_.resize(local_nx_,local_ny_,local_nz_,0);
+	
+	set_initial_conditions();
+	set_boundary_conditions();
+	
+
+}
+
+
+//set up the communicators, data types etc
+void Diffusion3D::setup_MPI_stuff() {
+	int periodic[3] = {false,false,false};	//or true,true,true?
+	MPI_Cart_create(MPI_COMM_WORLD,3,topology_,periodic,true,&cart_comm_);	//dimensions are the same as in vector
+	
+	//get rank & size of cartesian communicator
+	MPI_Comm_rank(cart_comm_,&rank_);
+	MPI_Comm_size(cart_comm_,&size_);
+	
+	//get coordinates of rank
+	MPI_Cart_coords(cart_comm_,rank_,3, cartesian_coords_);
+	
+	//determine neighbours
+	MPI_Cart_shift(cart_comm_,0,1,&left_,&right_);
+	MPI_Cart_shift(cart_comm_,1,1,&bottom_,&top_);
+	MPI_Cart_shift(cart_comm_,2,1,&back_,&front_);	//z direction points forwards -->back,front (or front,back), not quite sure...
+	
+	/*std::cout << "Rank: "<< rank_ << " is at position: " << cartesian_coords_[0] << " " << cartesian_coords_[1] << " " << cartesian_coords_[2]
+		<< "left right | bottom top | back front " << left_ << " " << right_ << " | " << bottom_ << " " << top_ << " | " << back_ << " " << front_ << "\n";*/
+	
+
+	
+	//xy-plane is contiguous in memory
+	MPI_Type_contiguous(local_nx_*local_ny_,mpi_val_type,&planexy_type_);
+	
+	//xz-plane: localnz blocks of length localnx with a stride of localnx*localny
+	MPI_Type_vector(local_nz_,local_nx_,local_nx_*local_ny_,mpi_val_type,&planexz_type_);
+	
+	//yz-plane:
+/*
+	//use indexed type creator
+	std::vector<int> offsets(local_ny_*local_nz_);
+	int outer_counter = 0;
+	#pragma omp parallel for
+	for (int k = 0; k < local_nz_;k++,outer_counter++) {
+		int inner_counter = 0;
+		for (int j = 0; j < local_ny_;j++,inner_counter++) {
+			offsets[j+local_ny_*k] = inner_counter*local_nx_ + outer_counter*(local_nx_*local_ny_);
+			if (rank_==0)
+				std::cout << offsets.at(j+local_ny_*k) << " ";
+		}
+	} std::cout << "\n";
+	std::vector<int> blocklens(local_ny_*local_nz_,1);
+	MPI_Type_indexed(local_ny_*local_nz_,blocklens.data(),offsets.data(),mpi_val_type,&planeyz_type_);
+	
+	Damn I think this is the same as */
+	MPI_Type_vector(local_ny_*local_nz_,1,local_nx_,mpi_val_type,&planeyz_type_);
 }
 
 
@@ -71,5 +141,9 @@ void Diffusion3D::write_debug_info(std::ostream &os) const {
 	os << "Stried in z-direction should be:\t\t" << density_.get_sizeX()*density_.get_sizeY()*sizeof(val_type)<<"\n";
 	os << "\n------------------------------------------------------------------------\n\n";
 }
+
+void Diffusion3D::set_boundary_conditions() {}
+
+void Diffusion3D::set_initial_conditions() {}
 
 

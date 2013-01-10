@@ -63,6 +63,10 @@ class Diffusion3D {
 		*/
 		void print_density (std::string filename) const ;
 		
+		/*!
+		* This function writes everything there is to know about an object of this class to os
+		* @param &os is the ostream where you want to write the data 
+		*/
 		
 		void write_debug_info(std::ostream &os) const;		//use this to write everything about object to ostream
 		
@@ -102,6 +106,7 @@ class Diffusion3D {
 		int 		rank_;
 		int 		size_;
 		int 		cartesian_coords_[3];	
+		int 		topology_[3];	//#nodes in each direction
 		
 		count_type	local_nx_,
 					local_ny_,
@@ -124,7 +129,7 @@ class Diffusion3D {
 		
 		//-----------------------private functions------------------------
 		
-
+		void setup_MPI_stuff();		//called in constructor
 
 		void set_initial_conditions();
 		
