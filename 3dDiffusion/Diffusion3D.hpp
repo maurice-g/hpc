@@ -78,7 +78,7 @@ class Diffusion3D {
 		//problem specific parameters
 		val_type 	D_;					// Diffusion coefficient
 		val_type 	T_;					// Time to simulate
-	
+
 		
 		
 		// numerical parameters
@@ -136,9 +136,6 @@ class Diffusion3D {
 		void set_boundary_conditions();
 		
 		void FTCS();					//forward time, central space stencil
-
-
-
 
 };
 

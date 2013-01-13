@@ -2,6 +2,8 @@
 #include <mpi.h>
 #include <cassert>
 #include <iostream>
+#include <stdint.h>
+#include <vector>
 #include <omp.h>
 
 //constructor
@@ -91,14 +93,22 @@ void Diffusion3D::setup_MPI_stuff() {
 	
 	Damn I think this is the same as */
 	MPI_Type_vector(local_ny_*local_nz_,1,local_nx_,mpi_val_type,&planeyz_type_);
+
+	MPI_Type_commit(&planexy_type_);
+	MPI_Type_commit(&planexz_type_);
+	MPI_Type_commit(&planeyz_type_);
 }
 
 
 //Destructor
 Diffusion3D::~Diffusion3D() {
-	//free mpi types!
 	std::cout << "Destructor Called\n";
-	
+
+	//free mpi types
+	// leads to errors, as Destructor is called after MPI_Finalize()	
+	//MPI_Type_free(&planexy_type_);
+	//MPI_Type_free(&planexz_type_);
+	//MPI_Type_free(&planeyz_type_);	
 }
 
 
@@ -135,8 +145,8 @@ void Diffusion3D::write_debug_info(std::ostream &os) const {
 	os << "Check whether density_ vector is aligned to 64 bytes:\n"
 		<< "\t\t Starting Adress\t\t" << &this->density_(0,0,0) << "\n"
 		<< "\t\t Adress of (1,0,0)\t\t" << &this->density_(1,0,0) <<"\n"
-		<< "\t\t Adress of (0,1,0)\t\t" << &this->density_(0,1,0) <<"\t Stride in y-direction:\t"<<int(&this->density_(0,1,0))-int(&this->density_(0,0,0))<<" Bytes\n"
-		<< "\t\t Adress of (0,0,1)\t\t" << &this->density_(0,0,1) <<"\t Stride in z-direction:\t"<<int(&this->density_(0,0,1))-int(&this->density_(0,0,0))<<" Bytes\n";
+		<< "\t\t Adress of (0,1,0)\t\t" << &this->density_(0,1,0) <<"\t Stride in y-direction:\t"<<intptr_t(&this->density_(0,1,0))-intptr_t(&this->density_(0,0,0))<<" Bytes\n"
+		<< "\t\t Adress of (0,0,1)\t\t" << &this->density_(0,0,1) <<"\t Stride in z-direction:\t"<<intptr_t(&this->density_(0,0,1))-intptr_t(&this->density_(0,0,0))<<" Bytes\n";
 	os << "Stride in y-direction should be:\t\t" << density_.get_sizeX()*sizeof(val_type) <<"\n";
 	os << "Stried in z-direction should be:\t\t" << density_.get_sizeX()*density_.get_sizeY()*sizeof(val_type)<<"\n";
 	os << "\n------------------------------------------------------------------------\n\n";
@@ -144,6 +154,111 @@ void Diffusion3D::write_debug_info(std::ostream &os) const {
 
 void Diffusion3D::set_boundary_conditions() {}
 
-void Diffusion3D::set_initial_conditions() {}
+void Diffusion3D::set_initial_conditions() {
+	for (count_type k=4; k<6; k++) {
+		for (count_type j=4; j<6; j++) {
+			for (count_type i=4; i<6; i++) {
+				density_(i,j,k) = 1;
+			}
+		}
+	}
+}
+
+void Diffusion3D::start_simulation(count_type stencil) {
+	std::cout << density_;
+	FTCS();
+	std::cout << density_;
+}
+
+void Diffusion3D::FTCS() {
+	// copy densities to densities_old_ vector 
+	memcpy(&density_old_(0,0,0), &density_(0,0,0), sizeof(val_type)*local_nx_*local_ny_*local_nz_);
+	
+	MPI_Status status[12];
+	MPI_Request reqs[12];
+
+        // send left border plane
+        MPI_Isend(&density_old_(1,0,0),1,planexy_type_,left_,0,cart_comm_,&reqs[0]);
+        // recieve left ghost plane
+        MPI_Irecv(&density_old_(0,0,0),1,planexy_type_,left_,0,cart_comm_,&reqs[1]);
+        // send right border plane
+        MPI_Isend(&density_old_(local_nx_-2,0,0),1,planexy_type_,right_,0,cart_comm_,&reqs[2]);
+        // recieve right ghost plane
+        MPI_Irecv(&density_old_(local_nx_-1,0,0),1,planexy_type_,right_,0,cart_comm_,&reqs[3]);
+        // send bottom border plane
+        MPI_Isend(&density_old_(0,1,0),1,planexz_type_,bottom_,0,cart_comm_,&reqs[4]);
+        // recieve bottom ghost plane
+        MPI_Irecv(&density_old_(0,0,0),1,planexz_type_,bottom_,0,cart_comm_,&reqs[5]);
+        // send top border plane
+        MPI_Isend(&density_old_(0,local_ny_-2,0),1,planexz_type_,top_,0,cart_comm_,&reqs[6]);
+        // recieve top border plane
+        MPI_Irecv(&density_old_(0,local_ny_-1,0),1,planexz_type_,top_,0,cart_comm_,&reqs[7]);
+        // send back border plane
+        MPI_Isend(&density_old_(0,0,1),1,planexy_type_,back_,0,cart_comm_,&reqs[8]);
+        // recieve back ghost plane
+        MPI_Irecv(&density_old_(0,0,0),1,planexy_type_,back_,0,cart_comm_,&reqs[9]);
+        // send front border plane
+        MPI_Isend(&density_old_(0,0,local_nz_-2),1,planexy_type_,front_,0,cart_comm_,&reqs[10]);
+        // recieve front border plane
+        MPI_Irecv(&density_old_(0,0,local_nz_-1),1,planexy_type_,front_,0,cart_comm_,&reqs[11]);
+
+	// do computation of interior nodes
+	val_type prefac = D_*dt_/(dx_*dx_);
+	for (count_type k=2; k<local_nz_-2; k++) {
+		for (count_type j=2; j<local_ny_-2; j++) {
+			for (count_type i=2;i<local_nx_-2; i++) {
+	    			density_(i,j,k) += prefac*(	 density_old_(i-1,j,k)+density_old_(i+1,j,k)
+								+density_old_(i,j-1,k)+density_old_(i,j+1,k)
+								+density_old_(i,j,k-1)+density_old_(i,j,k+1) - 6*density_old_(i,j,k) );
+			}
+		}
+	}
+
+	// wait for the ghost cells to arrive
+    	MPI_Waitall(12,reqs,status);
+
+	// do computation of border planes, given that they do not lie on the global boundary
+	std::vector<count_type> xLayers, yLayers, zLayers;
+	if (cartesian_coords_[0]!=0) xLayers.push_back(1);
+	if (cartesian_coords_[0]+1!=topology_[0]) xLayers.push_back(local_nx_-2);
+	if (cartesian_coords_[1]!=0) yLayers.push_back(1);
+	if (cartesian_coords_[1]+1!=topology_[1]) yLayers.push_back(local_ny_-2);
+	if (cartesian_coords_[2]!=0) zLayers.push_back(1);
+	if (cartesian_coords_[2]+1!=topology_[2]) zLayers.push_back(local_nz_-2);
+
+	// compute left and right border plane
+	for (count_type k=1; k<local_nz_-1; k++) {
+		for (count_type j=1; j<local_ny_-1; j++) {
+			for (count_type m=0; m<xLayers.size(); m++) {
+				count_type i = xLayers[m];
+	    			density_(i,j,k) += prefac*(	 density_old_(i-1,j,k)+density_old_(i+1,j,k)
+								+density_old_(i,j-1,k)+density_old_(i,j+1,k)
+								+density_old_(i,j,k-1)+density_old_(i,j,k+1) - 6*density_old_(i,j,k) );
+			}		
+		}	
+	}
+	// compute bottom and top border plane
+	for (count_type k=1; k<local_nz_-1; k++) {
+		for (count_type m=0; m<yLayers.size(); m++) {
+			count_type j = yLayers[m];
+			for (count_type i=1; i<local_nx_-1; i++) {
+	    			density_(i,j,k) += prefac*(	 density_old_(i-1,j,k)+density_old_(i+1,j,k)
+								+density_old_(i,j-1,k)+density_old_(i,j+1,k)
+								+density_old_(i,j,k-1)+density_old_(i,j,k+1) - 6*density_old_(i,j,k) );
+			}		
+		}	
+	}
+	// compute left and right border plane
+	for (count_type m=0; m<zLayers.size(); m++) {
+		count_type k = zLayers[m];
+		for (count_type j=1; j<local_ny_-1; j++) {
+			for (count_type i=1; i<local_nx_-1; i++) {
+	    			density_(i,j,k) += prefac*(	 density_old_(i-1,j,k)+density_old_(i+1,j,k)
+								+density_old_(i,j-1,k)+density_old_(i,j+1,k)
+								+density_old_(i,j,k-1)+density_old_(i,j,k+1) - 6*density_old_(i,j,k) );
+			}		
+		}	
+	}
+}
 
 
