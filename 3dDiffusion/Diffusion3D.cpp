@@ -10,8 +10,8 @@
 #include <cstring>
 #include <openacc.h>
 
-#define DENSITY(I,J,K) density_[I+J*local_nx_+K*local_nx_*local_ny_]
-#define DENSITY_OLD(I,J,K) density_old_[I+J*local_nx_+K*local_nx_*local_ny_]
+#define DENSITY(I,J,K) density_.data_[I+J*local_nx_+K*local_nx_*local_ny_]
+#define DENSITY_OLD_(I,J,K) density_old_.data_[I+J*local_nx_+K*local_nx_*local_ny_]
 
 
 //constructor

@@ -77,8 +77,8 @@ class Vector3d {
 		}
 				 
 	
-	private:
 		std::vector<val_type,Allocator> data_;
+	private:
 		unsigned int size_X_,size_Y_,size_Z_;
 		
 };
