@@ -4,7 +4,7 @@
 #include "Diffusion3D.hpp"
 #include <mpi.h>
 #include <string>
-#include <omp.h>
+//#include <omp.h>
 
 
 int main(int argc, char *argv[]) {
@@ -12,7 +12,7 @@ int main(int argc, char *argv[]) {
 		std::cout << "Too few arguments: [dx] [nx] [ny] [nz] [topology x] [topology y] [topology z]\n";
 		return 1;
 	}
-	omp_set_num_threads(16);
+	//omp_set_num_threads(16);
 	MPI_Init(&argc,&argv);
 	int rank;
 	MPI_Comm_rank(MPI_COMM_WORLD,&rank);
@@ -29,7 +29,7 @@ int main(int argc, char *argv[]) {
 	double D = 1.;
 	double T = 1.;
 
-	
+
 	Diffusion3D Simulation(dx,nx,ny,nz,topology,D,T);
 	
 

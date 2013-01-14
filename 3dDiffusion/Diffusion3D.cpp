@@ -8,10 +8,10 @@
 #include <string>
 #include <sstream>
 #include <cstring>
-#include <openacc.h>
+//#include <openacc.h>
 
 #define DENSITY(I,J,K) density_.data_[I+J*local_nx_+K*local_nx_*local_ny_]
-#define DENSITY_OLD_(I,J,K) density_old_.data_[I+J*local_nx_+K*local_nx_*local_ny_]
+#define DENSITY_OLD(I,J,K) density_old_.data_[I+J*local_nx_+K*local_nx_*local_ny_]
 
 
 //constructor
@@ -221,13 +221,19 @@ void Diffusion3D::FTCS() {
 
 	// do computation of interior nodes
 	val_type prefac = D_*dt_/(dx_*dx_*dx_);
-	#pragma omp parallel for
+	//#pragma omp parallel for
 	for (count_type k=2; k<local_nz_-2; k++) {
 		for (count_type j=2; j<local_ny_-2; j++) {
 			for (count_type i=2;i<local_nx_-2; i++) {
-	    			DENSITY(i,j,k) += prefac*(	 DENSITY_OLD_(i-1,j,k)+DENSITY_OLD_(i+1,j,k)
-								+DENSITY_OLD_(i,j-1,k)+DENSITY_OLD_(i,j+1,k)
-								+DENSITY_OLD_(i,j,k-1)+DENSITY_OLD_(i,j,k+1) - 6*DENSITY_OLD_(i,j,k) );
+					std::cout <<"p1 reached i j k  " << i << " " << j << " " << k << "\n";
+					std::cout << density_old_.data_[i+j*local_nx_ +(k-1)*local_nx_*local_ny_] <<"\n";
+					std::cout << density_old_(i,j,k-1);				//this line fails too!
+					std::cout << DENSITY_OLD(i,j,k-1) << "\n";		//this line --> error?? DENSITY_OLD(i,j,k) works however??
+
+	    			DENSITY(i,j,k) = DENSITY(i,j,k) + prefac*(	 DENSITY_OLD(i-1,j,k)+DENSITY_OLD(i+1,j,k)
+								+DENSITY_OLD(i,j-1,k)+DENSITY_OLD(i,j+1,k)
+								+DENSITY_OLD(i,j,k-1)+DENSITY_OLD(i,j,k+1) - 6*DENSITY_OLD(i,j,k) );
+
 			}
 		}
 	}
@@ -250,9 +256,9 @@ void Diffusion3D::FTCS() {
 		for (count_type j=1; j<local_ny_-1; j++) {
 			for (count_type m=0; m<xLayers.size(); m++) {
 				count_type i = xLayers[m];
-	    			DENSITY(i,j,k) += prefac*(	 DENSITY_OLD_(i-1,j,k)+DENSITY_OLD_(i+1,j,k)
-								+DENSITY_OLD_(i,j-1,k)+DENSITY_OLD_(i,j+1,k)
-								+DENSITY_OLD_(i,j,k-1)+DENSITY_OLD_(i,j,k+1) - 6*DENSITY_OLD_(i,j,k) );
+	    			DENSITY(i,j,k) += prefac*(	 DENSITY_OLD(i-1,j,k)+DENSITY_OLD(i+1,j,k)
+								+DENSITY_OLD(i,j-1,k)+DENSITY_OLD(i,j+1,k)
+								+DENSITY_OLD(i,j,k-1)+DENSITY_OLD(i,j,k+1) - 6*DENSITY_OLD(i,j,k) );
 			}		
 		}	
 	}
@@ -262,9 +268,9 @@ void Diffusion3D::FTCS() {
 		for (count_type m=0; m<yLayers.size(); m++) {
 			count_type j = yLayers[m];
 			for (count_type i=2; i<local_nx_-2; i++) {
-	    			DENSITY(i,j,k) += prefac*(	 DENSITY_OLD_(i-1,j,k)+DENSITY_OLD_(i+1,j,k)
-								+DENSITY_OLD_(i,j-1,k)+DENSITY_OLD_(i,j+1,k)
-								+DENSITY_OLD_(i,j,k-1)+DENSITY_OLD_(i,j,k+1) - 6*DENSITY_OLD_(i,j,k) );
+	    			DENSITY(i,j,k) += prefac*(	 DENSITY_OLD(i-1,j,k)+DENSITY_OLD(i+1,j,k)
+								+DENSITY_OLD(i,j-1,k)+DENSITY_OLD(i,j+1,k)
+								+DENSITY_OLD(i,j,k-1)+DENSITY_OLD(i,j,k+1) - 6*DENSITY_OLD(i,j,k) );
 			}		
 		}	
 	}
@@ -275,9 +281,9 @@ void Diffusion3D::FTCS() {
 		#pragma omp parallel for
 		for (count_type j=2; j<local_ny_-2; j++) {
 			for (count_type i=2; i<local_nx_-2; i++) {
-	    			DENSITY(i,j,k) += prefac*(	 DENSITY_OLD_(i-1,j,k)+DENSITY_OLD_(i+1,j,k)
-								+DENSITY_OLD_(i,j-1,k)+DENSITY_OLD_(i,j+1,k)
-								+DENSITY_OLD_(i,j,k-1)+DENSITY_OLD_(i,j,k+1) - 6*DENSITY_OLD_(i,j,k) );
+	    			DENSITY(i,j,k) += prefac*(	 DENSITY_OLD(i-1,j,k)+DENSITY_OLD(i+1,j,k)
+								+DENSITY_OLD(i,j-1,k)+DENSITY_OLD(i,j+1,k)
+								+DENSITY_OLD(i,j,k-1)+DENSITY_OLD(i,j,k+1) - 6*DENSITY_OLD(i,j,k) );
 			}		
 		}	
 	}
