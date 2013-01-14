@@ -11,7 +11,7 @@ NONBLOCK = -DNONBLOCKINGBCAST
 all: DistGEMM
 
 DistGEMM: main.o DistGemm.o
-	$(CXX) $(DEBUG) $(CXXFLAGS) -I$(INCLUDE)  $(LIBS) main.o DistGemm.o -o DistGEMM.exe
+	$(CXX) $(DEBUG) $(CXXFLAGS) -I$(INCLUDE)  $(LIBS) main.o DistGemm.o -o DistGEMM$N.exe
 
 main.o : main.cpp DistGEMM.cpp
 	$(CXX) $(DEBUG) $(CXXFLAGS) -c -I$(INCLUDE) main.cpp -o main.o
