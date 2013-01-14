@@ -39,14 +39,14 @@ class Vector3d {
 		* @param j -> y-direction 
 		* @param k -> z-direction 
 		*/
-		val_type& operator()(unsigned int i, unsigned int j, unsigned int k) {
+		inline val_type& operator()(unsigned int i, unsigned int j, unsigned int k) {
 					assert(i < size_X_);
 					assert(j < size_Y_);
 					assert(k < size_Z_);
 					return data_[i + size_X_*j + size_X_*size_Y_*k];
 					}
 		
-		val_type const& operator()(unsigned int i, unsigned int j, unsigned int k) const {
+		inline val_type const& operator()(unsigned int i, unsigned int j, unsigned int k) const {
 					assert(i < size_X_);
 					assert(j < size_Y_);
 					assert(k < size_Z_);

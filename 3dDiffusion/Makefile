@@ -1,10 +1,10 @@
 #makefile to compile the 3ddiffusion code
 #change next line to CC if on toedi, add -fast (-O3) to CXXFLAGS
 
-CXX = mpicc
-CXXFLAGS = -O3 
+CXX = CC
+CXXFLAGS = -O3 -hlist=m
 INCLUDE = ./HelperClasses
-LIBS = -lmpi -lmpi++
+LIBS =
 
 all: Diffusion3d
 
