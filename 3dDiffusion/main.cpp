@@ -7,14 +7,20 @@
 
 
 int main(int argc, char *argv[]) {
+	if (argc < 6) {
+		std::cout << "Too few arguments: [#MPI processes] [dx] [nx] [ny] [nz]\n";
+		return 1;
+	}
 	MPI_Init(&argc,&argv);
-	int rank, size;
+	int rank,size;
 	MPI_Comm_rank(MPI_COMM_WORLD,&rank);
+	
+	size = atoi(argv[1]);
+	double dx = atof(argv[2]);
 
-	double dx = 0.25;
-	unsigned int nx = 10;
-	unsigned int ny = 10;
-	unsigned int nz = 10;
+	unsigned int nx = atoi(argv[3]);
+	unsigned int ny = atoi(argv[4]);
+	unsigned int nz = atoi(argv[5]);
 	Diffusion3D::coord_type topology = {2,2,2};	//a 2x2x2 mesh
 	double D = 1.;
 	double T = 1.;
@@ -27,14 +33,19 @@ int main(int argc, char *argv[]) {
 	if (rank==0) {
 		//Simulation.write_debug_info(std::cout);
 	}
-	
-	
-	Simulation.start_simulation(1);	
-
+	//# flop: 9 per gridpoint
 	MPI_Barrier(MPI_COMM_WORLD);
+	double t0 = MPI_Wtime();
+	Simulation.start_simulation(1);	
+	MPI_Barrier(MPI_COMM_WORLD);
+	double t1 = MPI_Wtime();
+	double runtime = t1-t0;
+	double flops = nx*ny*nz*9*T/Simulation.get_dt();
 	std::string fname = "densities-";
 	Simulation.print_density(fname);
-	
+	if (rank==0) 
+		std::cout << "3dDiffusion-nodes-dx-nx-ny-nz-runtime-flops " << size << " " << dx << " " << nx << " " << ny << " " << nz <<
+				  " " << runtime << " " << flops << "\n";
 	MPI_Finalize();
 	return 0;
 }
