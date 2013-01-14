@@ -3,6 +3,7 @@
 #include <iostream>
 #include "Diffusion3D.hpp"
 #include <mpi.h>
+#include <string>
 
 
 int main(int argc, char *argv[]) {
@@ -27,9 +28,13 @@ int main(int argc, char *argv[]) {
 		//Simulation.write_debug_info(std::cout);
 	}
 	
+	
 	Simulation.start_simulation(1);	
 
 	MPI_Barrier(MPI_COMM_WORLD);
+	std::string fname = "densities-";
+	Simulation.print_density(fname);
+	
 	MPI_Finalize();
 	return 0;
 }

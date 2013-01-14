@@ -5,12 +5,14 @@
 #include <stdint.h>
 #include <vector>
 #include <omp.h>
+#include <string>
+#include <sstream>
 
 //constructor
 Diffusion3D::Diffusion3D(val_type dx, count_type nx, count_type ny, count_type nz,coord_type topology,val_type D, val_type T):
 						D_(D),T_(T),dx_(dx),
 						global_nx_(nx),global_ny_(ny),global_nz_(nz),
-						global_lengthx_(nx*dx),global_lengthy_(ny*dx),global_lengthz_(nz*dx)
+						global_lengthx_((nx-1)*dx),global_lengthy_((ny-1)*dx),global_lengthz_((nz-1)*dx)
 {
 	
 	std::cout << "Constructor Called\n";
@@ -155,12 +157,15 @@ void Diffusion3D::write_debug_info(std::ostream &os) const {
 void Diffusion3D::set_boundary_conditions() {}
 
 void Diffusion3D::set_initial_conditions() {
-	for (count_type k=4; k<6; k++) {
-		for (count_type j=4; j<6; j++) {
-			for (count_type i=4; i<6; i++) {
-				density_(i,j,k) = 1;
+	if (cartesian_coords_[0] == 0 && cartesian_coords_[1] == 0 && cartesian_coords_[2] == 0) {
+	for (int k = 1; k < density_.get_sizeZ()-1;k++) {
+		for (int j = 1; j < density_.get_sizeY()-1;j++) {
+			for (int i = 1; i < density_.get_sizeX()-1;i++) {
+				density_(i,j,k) =1;
 			}
 		}
+	}
+		
 	}
 }
 
@@ -172,7 +177,8 @@ void Diffusion3D::start_simulation(count_type stencil) {
 
 void Diffusion3D::FTCS() {
 	// copy densities to densities_old_ vector 
-	memcpy(&density_old_(0,0,0), &density_(0,0,0), sizeof(val_type)*local_nx_*local_ny_*local_nz_);
+	//memcpy(&density_old_(0,0,0), &density_(0,0,0), sizeof(val_type)*local_nx_*local_ny_*local_nz_);
+	swap(density_old_,density_);
 	
 	MPI_Status status[12];
 	MPI_Request reqs[12];
@@ -259,6 +265,32 @@ void Diffusion3D::FTCS() {
 			}		
 		}	
 	}
+}
+
+void Diffusion3D::print_density(std::string filename) const{
+	std::ofstream outfile;
+	std::stringstream coord_infox,coord_infoy,coord_infoz,size_infon,size_infom,size_infok;
+	coord_infox << cartesian_coords_[0];
+	coord_infoy << cartesian_coords_[1];
+	coord_infoz << cartesian_coords_[2];
+	
+	size_infon << local_nx_-2;
+	size_infom << local_ny_-2;
+	size_infok << local_nz_-2;
+	filename = filename + coord_infox.str() +"-" + coord_infoy.str() + "-" +coord_infoz.str() +"_" + size_infon.str() +"-" +size_infom.str() +"-" + size_infok.str() +".txt";
+	outfile.open(filename.c_str(),std::ios_base::out);
+	for (int k = 1; k < density_.get_sizeZ()-1;k++) {
+		for (int j = 1; j < density_.get_sizeY()-1;j++) {
+			for (int i = 1; i < density_.get_sizeX()-1;i++) {
+				outfile << density_(i,j,k) << " ";
+			}
+			outfile << "\n";
+		}
+	}
+	
+	outfile.close();
+	//densities-x-y-z_m_n_k.txt
+
 }
 
 
