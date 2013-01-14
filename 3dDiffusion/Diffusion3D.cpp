@@ -25,7 +25,7 @@ Diffusion3D::Diffusion3D(val_type dx, count_type nx, count_type ny, count_type n
 		topology_[i] = topology[i];
 	
 	
-	dt_ = dx_*dx_/(6*D);	// dt < dx^2 /(4*D) for stability of FTCS
+	dt_ = dx_*dx_*dx_/(6*D);	// dt < dx^2 /(4*D) for stability of FTCS
 
 
 	
@@ -170,27 +170,27 @@ void Diffusion3D::set_initial_conditions() {
 }
 
 void Diffusion3D::start_simulation(count_type stencil) {
-	std::cout << density_;
-	FTCS();
-	std::cout << density_;
+	for (count_type i=0; i<10; i++) {
+		FTCS();
+	}
 }
 
 void Diffusion3D::FTCS() {
 	// copy densities to densities_old_ vector 
-	//memcpy(&density_old_(0,0,0), &density_(0,0,0), sizeof(val_type)*local_nx_*local_ny_*local_nz_);
-	swap(density_old_,density_);
+	memcpy(&density_old_(0,0,0), &density_(0,0,0), sizeof(val_type)*local_nx_*local_ny_*local_nz_);
+	//swap(density_old_,density_);
 	
 	MPI_Status status[12];
 	MPI_Request reqs[12];
 
         // send left border plane
-        MPI_Isend(&density_old_(1,0,0),1,planexy_type_,left_,0,cart_comm_,&reqs[0]);
+        MPI_Isend(&density_old_(1,0,0),1,planeyz_type_,left_,0,cart_comm_,&reqs[0]);
         // recieve left ghost plane
-        MPI_Irecv(&density_old_(0,0,0),1,planexy_type_,left_,0,cart_comm_,&reqs[1]);
+        MPI_Irecv(&density_old_(0,0,0),1,planeyz_type_,left_,0,cart_comm_,&reqs[1]);
         // send right border plane
-        MPI_Isend(&density_old_(local_nx_-2,0,0),1,planexy_type_,right_,0,cart_comm_,&reqs[2]);
+        MPI_Isend(&density_old_(local_nx_-2,0,0),1,planeyz_type_,right_,0,cart_comm_,&reqs[2]);
         // recieve right ghost plane
-        MPI_Irecv(&density_old_(local_nx_-1,0,0),1,planexy_type_,right_,0,cart_comm_,&reqs[3]);
+        MPI_Irecv(&density_old_(local_nx_-1,0,0),1,planeyz_type_,right_,0,cart_comm_,&reqs[3]);
         // send bottom border plane
         MPI_Isend(&density_old_(0,1,0),1,planexz_type_,bottom_,0,cart_comm_,&reqs[4]);
         // recieve bottom ghost plane
@@ -209,7 +209,7 @@ void Diffusion3D::FTCS() {
         MPI_Irecv(&density_old_(0,0,local_nz_-1),1,planexy_type_,front_,0,cart_comm_,&reqs[11]);
 
 	// do computation of interior nodes
-	val_type prefac = D_*dt_/(dx_*dx_);
+	val_type prefac = D_*dt_/(dx_*dx_*dx_);
 	for (count_type k=2; k<local_nz_-2; k++) {
 		for (count_type j=2; j<local_ny_-2; j++) {
 			for (count_type i=2;i<local_nx_-2; i++) {
@@ -225,12 +225,12 @@ void Diffusion3D::FTCS() {
 
 	// do computation of border planes, given that they do not lie on the global boundary
 	std::vector<count_type> xLayers, yLayers, zLayers;
-	if (cartesian_coords_[0]!=0) xLayers.push_back(1);
-	if (cartesian_coords_[0]+1!=topology_[0]) xLayers.push_back(local_nx_-2);
-	if (cartesian_coords_[1]!=0) yLayers.push_back(1);
-	if (cartesian_coords_[1]+1!=topology_[1]) yLayers.push_back(local_ny_-2);
-	if (cartesian_coords_[2]!=0) zLayers.push_back(1);
-	if (cartesian_coords_[2]+1!=topology_[2]) zLayers.push_back(local_nz_-2);
+	xLayers.push_back(1);
+	xLayers.push_back(local_nx_-2);
+	yLayers.push_back(1);
+	yLayers.push_back(local_ny_-2);
+	zLayers.push_back(1);
+	zLayers.push_back(local_nz_-2);
 
 	// compute left and right border plane
 	for (count_type k=1; k<local_nz_-1; k++) {
@@ -247,7 +247,7 @@ void Diffusion3D::FTCS() {
 	for (count_type k=1; k<local_nz_-1; k++) {
 		for (count_type m=0; m<yLayers.size(); m++) {
 			count_type j = yLayers[m];
-			for (count_type i=1; i<local_nx_-1; i++) {
+			for (count_type i=2; i<local_nx_-2; i++) {
 	    			density_(i,j,k) += prefac*(	 density_old_(i-1,j,k)+density_old_(i+1,j,k)
 								+density_old_(i,j-1,k)+density_old_(i,j+1,k)
 								+density_old_(i,j,k-1)+density_old_(i,j,k+1) - 6*density_old_(i,j,k) );
@@ -257,8 +257,8 @@ void Diffusion3D::FTCS() {
 	// compute left and right border plane
 	for (count_type m=0; m<zLayers.size(); m++) {
 		count_type k = zLayers[m];
-		for (count_type j=1; j<local_ny_-1; j++) {
-			for (count_type i=1; i<local_nx_-1; i++) {
+		for (count_type j=2; j<local_ny_-2; j++) {
+			for (count_type i=2; i<local_nx_-2; i++) {
 	    			density_(i,j,k) += prefac*(	 density_old_(i-1,j,k)+density_old_(i+1,j,k)
 								+density_old_(i,j-1,k)+density_old_(i,j+1,k)
 								+density_old_(i,j,k-1)+density_old_(i,j,k+1) - 6*density_old_(i,j,k) );
