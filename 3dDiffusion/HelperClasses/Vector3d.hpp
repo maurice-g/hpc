@@ -17,6 +17,7 @@ namespace D3 {
 template <typename T,typename Allocator = hpc12::aligned_allocator<T,64> >
 class Vector3d {
 	public:
+		friend class Diffusion3D;
 		typedef T val_type;
 		
 		/*!
