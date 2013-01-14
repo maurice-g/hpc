@@ -15,7 +15,7 @@ Diffusion3D::Diffusion3D(val_type dx, count_type nx, count_type ny, count_type n
 						global_lengthx_((nx-1)*dx),global_lengthy_((ny-1)*dx),global_lengthz_((nz-1)*dx)
 {
 	
-	std::cout << "Constructor Called\n";
+	//std::cout << "Constructor Called\n";
 	//check # nodes vs mesh points: each node has the same number of meshpoints!
 	assert(nx % topology[0] == 0);
 	assert(ny % topology[1] == 0);
@@ -104,7 +104,7 @@ void Diffusion3D::setup_MPI_stuff() {
 
 //Destructor
 Diffusion3D::~Diffusion3D() {
-	std::cout << "Destructor Called\n";
+	//std::cout << "Destructor Called\n";
 
 	//free mpi types
 	// leads to errors, as Destructor is called after MPI_Finalize()	
@@ -158,19 +158,23 @@ void Diffusion3D::set_boundary_conditions() {}
 
 void Diffusion3D::set_initial_conditions() {
 	if (cartesian_coords_[0] == 0 && cartesian_coords_[1] == 0 && cartesian_coords_[2] == 0) {
-	for (int k = 1; k < density_.get_sizeZ()-1;k++) {
-		for (int j = 1; j < density_.get_sizeY()-1;j++) {
-			for (int i = 1; i < density_.get_sizeX()-1;i++) {
-				density_(i,j,k) =1;
+		for (int k = 1; k < density_.get_sizeZ()-1;k++) {
+			for (int j = 1; j < density_.get_sizeY()-1;j++) {
+				for (int i = 1; i < density_.get_sizeX()-1;i++) {
+					density_(i,j,k) =1;
+				}
 			}
 		}
 	}
-		
-	}
+}
+
+Diffusion3D::val_type Diffusion3D::get_dt() {
+	return dt_;
 }
 
 void Diffusion3D::start_simulation(count_type stencil) {
-	for (count_type i=0; i<10; i++) {
+	count_type iterations = T_/dt_;
+	for (count_type i=0; i<iterations; i++) {
 		FTCS();
 	}
 }

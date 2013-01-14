@@ -56,7 +56,12 @@ class Diffusion3D {
 		* @param stencil specifies what stencil(FTCS, BTCS,...) to use: 1 stands for..., 2 for...
 		*/
 		void start_simulation(count_type stencil);
-		
+
+		/*!
+		* This function returns the timestep dt computed in the constructor
+		*/
+		val_type get_dt();
+	
 		/*!
 		* This function writes the content of density into a file
 		* @param filename is the name of the desired output-file
