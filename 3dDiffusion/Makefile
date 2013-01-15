@@ -2,7 +2,7 @@
 #change next line to CC if on toedi, add -fast (-O3) to CXXFLAGS
 
 CXX = mpicc
-CXXFLAGS = -O3 
+CXXFLAGS = #-O3 -hlist=m
 INCLUDE = ./HelperClasses
 LIBS = -lmpi -lmpi++
 

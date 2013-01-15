@@ -4,13 +4,15 @@
 #include "Diffusion3D.hpp"
 #include <mpi.h>
 #include <string>
+//#include <omp.h>
 
 
 int main(int argc, char *argv[]) {
 	if (argc < 8) {
-		std::cout << "Too few arguments: [dx] [nx] [ny] [nz] [topology x] [topology y] [topology z]\n";
+		std::cerr << "Too few arguments: [dx] [nx] [ny] [nz] [topology x] [topology y] [topology z]\n";
 		return 1;
 	}
+	//omp_set_num_threads(16);
 	MPI_Init(&argc,&argv);
 	int rank;
 	MPI_Comm_rank(MPI_COMM_WORLD,&rank);
@@ -27,7 +29,7 @@ int main(int argc, char *argv[]) {
 	double D = 1.;
 	double T = 1.;
 
-	
+
 	Diffusion3D Simulation(dx,nx,ny,nz,topology,D,T);
 	
 
@@ -42,7 +44,7 @@ int main(int argc, char *argv[]) {
 	MPI_Barrier(MPI_COMM_WORLD);
 	double t1 = MPI_Wtime();
 	double runtime = t1-t0;
-	double flops = nx*ny*nz*9*T/Simulation.get_dt();
+	double flops = (nx*ny*nz*9*T/Simulation.get_dt())/runtime;
 	std::string fname = "densities-";
 	Simulation.print_density(fname);
 	if (rank==0) 

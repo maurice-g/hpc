@@ -42,7 +42,7 @@ int main(int argc, char* argv[]) {
 
 	if (rank==0) {
 		std::stringstream ss;
-		ss << "benchmark-MPIWtime" << topsize << "x" << topsize << "x" << topsize << ".mes";	
+		ss << "benchmark-MPIWtimeNONBLOCK" << topsize << "x" << topsize << "x" << topsize << ".mes";	
 		std::ofstream mesFile(ss.str().c_str(), std::ios::in | std::ios::app);
 		mesFile << mes;
 		mesFile.close();

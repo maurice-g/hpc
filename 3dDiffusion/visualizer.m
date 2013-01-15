@@ -4,9 +4,9 @@ file_basename = 'densities-';
 
 dx=.25;
 
-m=10;
-n=10;
-p=10;
+m=100;
+n=100;
+p=100;
 
 topology = [2;2;2];
 
@@ -56,7 +56,7 @@ function surfzlim(hObj,event,x,y,z,densities)
     % Called to set zlim of surface in figure axes
     % when user moves the slider control
     val = get(hObj,'Value');
-    slice(x,y,z,densities,[1.25],[.5],val);
+    slice(x,y,z,densities,[10],[10],val);
 end
 
 

@@ -7,6 +7,8 @@
 #include <omp.h>
 #include <string>
 #include <sstream>
+#include <cstring>
+//#include <openacc.h>
 
 #define DENSITY(I,J,K) density_.data_[(I)+(J)*local_nx_+(K)*local_nx_*local_ny_]
 #define DENSITY_OLD(I,J,K) density_old_.data_[(I)+(J)*local_nx_+(K)*local_nx_*local_ny_]
@@ -161,10 +163,11 @@ void Diffusion3D::set_boundary_conditions() {}
 
 void Diffusion3D::set_initial_conditions() {
 	if (cartesian_coords_[0] == 0 && cartesian_coords_[1] == 0 && cartesian_coords_[2] == 0) {
-		for (int k = 1; k < density_.get_sizeZ()-1;k++) {
-			for (int j = 1; j < density_.get_sizeY()-1;j++) {
-				for (int i = 1; i < density_.get_sizeX()-1;i++) {
-					density_(i,j,k) =1;
+		#pragma omp parallel for 
+		for (int k = 1; k < local_nz_-1;k++) {
+			for (int j = 1; j < local_ny_-1;j++) {
+				for (int i = 1; i < local_nx_-1;i++) {
+					DENSITY(i,j,k) =1;
 				}
 			}
 		}
@@ -184,7 +187,7 @@ void Diffusion3D::start_simulation(count_type stencil) {
 
 void Diffusion3D::FTCS() {
 	// copy densities to densities_old_ vector 
-	memcpy(&density_old_(0,0,0), &density_(0,0,0), sizeof(val_type)*local_nx_*local_ny_*local_nz_);
+	std::memcpy(&density_old_(0,0,0), &density_(0,0,0), sizeof(val_type)*local_nx_*local_ny_*local_nz_);
 	//swap(density_old_,density_);
 	
 	MPI_Status status[12];
@@ -217,10 +220,11 @@ void Diffusion3D::FTCS() {
 
 	// do computation of interior nodes
 	val_type prefac = D_*dt_/(dx_*dx_*dx_);
+	//#pragma omp parallel for
 	for (count_type k=2; k<local_nz_-2; k++) {
 		for (count_type j=2; j<local_ny_-2; j++) {
 			for (count_type i=2;i<local_nx_-2; i++) {
-	    			DENSITY(i,j,k) += prefac*(	 DENSITY_OLD(i-1,j,k)+DENSITY_OLD(i+1,j,k)
+	    			DENSITY(i,j,k) = DENSITY(i,j,k) + prefac*(	 DENSITY_OLD(i-1,j,k)+DENSITY_OLD(i+1,j,k)
 								+DENSITY_OLD(i,j-1,k)+DENSITY_OLD(i,j+1,k)
 								+DENSITY_OLD(i,j,k-1)+DENSITY_OLD(i,j,k+1) - 6*DENSITY_OLD(i,j,k) );
 			}
@@ -240,6 +244,7 @@ void Diffusion3D::FTCS() {
 	zLayers.push_back(local_nz_-2);
 
 	// compute left and right border plane
+	//#pragma omp parallel for
 	for (count_type k=1; k<local_nz_-1; k++) {
 		for (count_type j=1; j<local_ny_-1; j++) {
 			for (count_type m=0; m<xLayers.size(); m++) {
@@ -251,6 +256,7 @@ void Diffusion3D::FTCS() {
 		}	
 	}
 	// compute bottom and top border plane
+	//#pragma omp parallel for
 	for (count_type k=1; k<local_nz_-1; k++) {
 		for (count_type m=0; m<yLayers.size(); m++) {
 			count_type j = yLayers[m];
@@ -262,8 +268,10 @@ void Diffusion3D::FTCS() {
 		}	
 	}
 	// compute left and right border plane
+	
 	for (count_type m=0; m<zLayers.size(); m++) {
 		count_type k = zLayers[m];
+		//#pragma omp parallel for
 		for (count_type j=2; j<local_ny_-2; j++) {
 			for (count_type i=2; i<local_nx_-2; i++) {
 	    			DENSITY(i,j,k) += prefac*(	 DENSITY_OLD(i-1,j,k)+DENSITY_OLD(i+1,j,k)
