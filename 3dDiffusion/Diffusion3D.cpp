@@ -8,6 +8,9 @@
 #include <string>
 #include <sstream>
 
+#define DENSITY(I,J,K) density_.data_[(I)+(J)*local_nx_+(K)*local_nx_*local_ny_]
+#define DENSITY_OLD(I,J,K) density_old_.data_[(I)+(J)*local_nx_+(K)*local_nx_*local_ny_]
+
 //constructor
 Diffusion3D::Diffusion3D(val_type dx, count_type nx, count_type ny, count_type nz,coord_type topology,val_type D, val_type T):
 						D_(D),T_(T),dx_(dx),
@@ -217,9 +220,9 @@ void Diffusion3D::FTCS() {
 	for (count_type k=2; k<local_nz_-2; k++) {
 		for (count_type j=2; j<local_ny_-2; j++) {
 			for (count_type i=2;i<local_nx_-2; i++) {
-	    			density_(i,j,k) += prefac*(	 density_old_(i-1,j,k)+density_old_(i+1,j,k)
-								+density_old_(i,j-1,k)+density_old_(i,j+1,k)
-								+density_old_(i,j,k-1)+density_old_(i,j,k+1) - 6*density_old_(i,j,k) );
+	    			DENSITY(i,j,k) += prefac*(	 DENSITY_OLD(i-1,j,k)+DENSITY_OLD(i+1,j,k)
+								+DENSITY_OLD(i,j-1,k)+DENSITY_OLD(i,j+1,k)
+								+DENSITY_OLD(i,j,k-1)+DENSITY_OLD(i,j,k+1) - 6*DENSITY_OLD(i,j,k) );
 			}
 		}
 	}
@@ -227,7 +230,7 @@ void Diffusion3D::FTCS() {
 	// wait for the ghost cells to arrive
     	MPI_Waitall(12,reqs,status);
 
-	// do computation of border planes, given that they do not lie on the global boundary
+	// do computation of border planes
 	std::vector<count_type> xLayers, yLayers, zLayers;
 	xLayers.push_back(1);
 	xLayers.push_back(local_nx_-2);
@@ -241,9 +244,9 @@ void Diffusion3D::FTCS() {
 		for (count_type j=1; j<local_ny_-1; j++) {
 			for (count_type m=0; m<xLayers.size(); m++) {
 				count_type i = xLayers[m];
-	    			density_(i,j,k) += prefac*(	 density_old_(i-1,j,k)+density_old_(i+1,j,k)
-								+density_old_(i,j-1,k)+density_old_(i,j+1,k)
-								+density_old_(i,j,k-1)+density_old_(i,j,k+1) - 6*density_old_(i,j,k) );
+	    			DENSITY(i,j,k) += prefac*(	 DENSITY_OLD(i-1,j,k)+DENSITY_OLD(i+1,j,k)
+								+DENSITY_OLD(i,j-1,k)+DENSITY_OLD(i,j+1,k)
+								+DENSITY_OLD(i,j,k-1)+DENSITY_OLD(i,j,k+1) - 6*DENSITY_OLD(i,j,k) );
 			}		
 		}	
 	}
@@ -252,9 +255,9 @@ void Diffusion3D::FTCS() {
 		for (count_type m=0; m<yLayers.size(); m++) {
 			count_type j = yLayers[m];
 			for (count_type i=2; i<local_nx_-2; i++) {
-	    			density_(i,j,k) += prefac*(	 density_old_(i-1,j,k)+density_old_(i+1,j,k)
-								+density_old_(i,j-1,k)+density_old_(i,j+1,k)
-								+density_old_(i,j,k-1)+density_old_(i,j,k+1) - 6*density_old_(i,j,k) );
+	    			DENSITY(i,j,k) += prefac*(	 DENSITY_OLD(i-1,j,k)+DENSITY_OLD(i+1,j,k)
+								+DENSITY_OLD(i,j-1,k)+DENSITY_OLD(i,j+1,k)
+								+DENSITY_OLD(i,j,k-1)+DENSITY_OLD(i,j,k+1) - 6*DENSITY_OLD(i,j,k) );
 			}		
 		}	
 	}
@@ -263,9 +266,9 @@ void Diffusion3D::FTCS() {
 		count_type k = zLayers[m];
 		for (count_type j=2; j<local_ny_-2; j++) {
 			for (count_type i=2; i<local_nx_-2; i++) {
-	    			density_(i,j,k) += prefac*(	 density_old_(i-1,j,k)+density_old_(i+1,j,k)
-								+density_old_(i,j-1,k)+density_old_(i,j+1,k)
-								+density_old_(i,j,k-1)+density_old_(i,j,k+1) - 6*density_old_(i,j,k) );
+	    			DENSITY(i,j,k) += prefac*(	 DENSITY_OLD(i-1,j,k)+DENSITY_OLD(i+1,j,k)
+								+DENSITY_OLD(i,j-1,k)+DENSITY_OLD(i,j+1,k)
+								+DENSITY_OLD(i,j,k-1)+DENSITY_OLD(i,j,k+1) - 6*DENSITY_OLD(i,j,k) );
 			}		
 		}	
 	}

@@ -18,6 +18,7 @@ template <typename T,typename Allocator = hpc12::aligned_allocator<T,64> >
 class Vector3d {
 	public:
 		typedef T val_type;
+		std::vector<val_type,Allocator> data_;
 		
 		/*!
 		* Constructor
@@ -77,7 +78,6 @@ class Vector3d {
 				 
 	
 	private:
-		std::vector<val_type,Allocator> data_;
 		unsigned int size_X_,size_Y_,size_Z_;
 		
 };
