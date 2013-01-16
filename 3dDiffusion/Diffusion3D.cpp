@@ -219,7 +219,7 @@ void Diffusion3D::FTCS() {
 
 	// do computation of interior nodes
 	val_type prefac = D_*dt_/(dx_*dx_*dx_);
-	//#pragma omp parallel for
+	#pragma omp parallel for schedule(static)
 	for (count_type k=2; k<local_nz_-2; k++) {
 		for (count_type j=2; j<local_ny_-2; j++) {
 			for (count_type i=2;i<local_nx_-2; i++) {
@@ -243,7 +243,7 @@ void Diffusion3D::FTCS() {
 	zLayers.push_back(local_nz_-2);
 
 	// compute left and right border plane
-	//#pragma omp parallel for
+	#pragma omp parallel for schedule(static)
 	for (count_type k=1; k<local_nz_-1; k++) {
 		for (count_type j=1; j<local_ny_-1; j++) {
 			for (count_type m=0; m<xLayers.size(); m++) {
@@ -255,7 +255,7 @@ void Diffusion3D::FTCS() {
 		}	
 	}
 	// compute bottom and top border plane
-	//#pragma omp parallel for
+	#pragma omp parallel for schedule(static)
 	for (count_type k=1; k<local_nz_-1; k++) {
 		for (count_type m=0; m<yLayers.size(); m++) {
 			count_type j = yLayers[m];
@@ -270,7 +270,7 @@ void Diffusion3D::FTCS() {
 	
 	for (count_type m=0; m<zLayers.size(); m++) {
 		count_type k = zLayers[m];
-		//#pragma omp parallel for
+		#pragma omp parallel for schedule(static)
 		for (count_type j=2; j<local_ny_-2; j++) {
 			for (count_type i=2; i<local_nx_-2; i++) {
 	    			DENSITY(i,j,k) = DENSITY_OLD(i,j,k)+ prefac*(	 DENSITY_OLD(i-1,j,k)+DENSITY_OLD(i+1,j,k)
