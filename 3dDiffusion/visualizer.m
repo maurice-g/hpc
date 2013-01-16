@@ -37,30 +37,68 @@ end
 [x,y,z] = meshgrid(dx*(0:m-1),dx*(0:n-1),dx*(0:p-1));
 %[x,y,z] = meshgrid(dx*(0:m-1));
 
-
+figure;
 %scatter3(x(:),y(:),z(:),40,densities(:), 'filled');
 slice(x,y,z,densities,[.5;1.25],[.5],[1])
 
 
 colorbar
+global xp;
+global yp;
+global zp;
+xp = 0;
+yp = 0;
+zp = 0;
 
 uicontrol('Style', 'slider',...
         'Min',0,'Max',dx*(p-1),'Value',.25,...
         'Position', [400 20 120 20],...
-        'Callback', {@surfzlim,x,y,z,densities});   
+        'Callback', {@surfzlimz,x,y,z,densities});   
     
+uicontrol('Style', 'slider',...
+        'Min',0,'Max',dx*(p-1),'Value',.25,...
+        'Position', [100 20 120 20],...
+        'Callback', {@surfzlimx,x,y,z,densities});  
+    
+uicontrol('Style', 'slider',...
+        'Min',0,'Max',dx*(p-1),'Value',.25,...
+        'Position', [250 20 120 20],...
+        'Callback', {@surfzlimy,x,y,z,densities});  
     
 end
 
-function surfzlim(hObj,event,x,y,z,densities)
+function surfzlimz(hObj,event,x,y,z,densities)
     % Called to set zlim of surface in figure axes
     % when user moves the slider control
     val = get(hObj,'Value');
-    slice(x,y,z,densities,[10],[10],val);
+    global xp;
+    global yp;
+    global zp;
+    zp=val;
+    slice(x,y,z,densities,xp,yp,zp);
 end
 
+function surfzlimx(hObj,event,x,y,z,densities)
+    % Called to set zlim of surface in figure axes
+    % when user moves the slider control
+    val = get(hObj,'Value');
+    global xp;
+    global yp;
+    global zp;
+    xp=val;
 
-
+    slice(x,y,z,densities,xp,yp,zp);
+end
+function surfzlimy(hObj,event,x,y,z,densities)
+    % Called to set zlim of surface in figure axes
+    % when user moves the slider control
+    val = get(hObj,'Value');
+    global yp;
+    global xp;
+    global zp;
+    yp = val;
+    slice(x,y,z,densities,xp,yp,zp);
+end
 
 
 

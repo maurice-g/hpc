@@ -186,9 +186,8 @@ void Diffusion3D::start_simulation(count_type stencil) {
 }
 
 void Diffusion3D::FTCS() {
-	// copy densities to densities_old_ vector 
-	std::memcpy(&density_old_(0,0,0), &density_(0,0,0), sizeof(val_type)*local_nx_*local_ny_*local_nz_);
-	//swap(density_old_,density_);
+	// swap densities to densities_old_ vector 
+	swap(density_old_,density_);
 	
 	MPI_Status status[12];
 	MPI_Request reqs[12];
@@ -224,7 +223,7 @@ void Diffusion3D::FTCS() {
 	for (count_type k=2; k<local_nz_-2; k++) {
 		for (count_type j=2; j<local_ny_-2; j++) {
 			for (count_type i=2;i<local_nx_-2; i++) {
-	    			DENSITY(i,j,k) = DENSITY(i,j,k) + prefac*(	 DENSITY_OLD(i-1,j,k)+DENSITY_OLD(i+1,j,k)
+	    			DENSITY(i,j,k) = DENSITY_OLD(i,j,k) + prefac*(	 DENSITY_OLD(i-1,j,k)+DENSITY_OLD(i+1,j,k)
 								+DENSITY_OLD(i,j-1,k)+DENSITY_OLD(i,j+1,k)
 								+DENSITY_OLD(i,j,k-1)+DENSITY_OLD(i,j,k+1) - 6*DENSITY_OLD(i,j,k) );
 			}
@@ -249,7 +248,7 @@ void Diffusion3D::FTCS() {
 		for (count_type j=1; j<local_ny_-1; j++) {
 			for (count_type m=0; m<xLayers.size(); m++) {
 				count_type i = xLayers[m];
-	    			DENSITY(i,j,k) += prefac*(	 DENSITY_OLD(i-1,j,k)+DENSITY_OLD(i+1,j,k)
+	    			DENSITY(i,j,k) = DENSITY_OLD(i,j,k)+ prefac*(	 DENSITY_OLD(i-1,j,k)+DENSITY_OLD(i+1,j,k)
 								+DENSITY_OLD(i,j-1,k)+DENSITY_OLD(i,j+1,k)
 								+DENSITY_OLD(i,j,k-1)+DENSITY_OLD(i,j,k+1) - 6*DENSITY_OLD(i,j,k) );
 			}		
@@ -261,7 +260,7 @@ void Diffusion3D::FTCS() {
 		for (count_type m=0; m<yLayers.size(); m++) {
 			count_type j = yLayers[m];
 			for (count_type i=2; i<local_nx_-2; i++) {
-	    			DENSITY(i,j,k) += prefac*(	 DENSITY_OLD(i-1,j,k)+DENSITY_OLD(i+1,j,k)
+	    			DENSITY(i,j,k) = DENSITY_OLD(i,j,k)+ prefac*(	 DENSITY_OLD(i-1,j,k)+DENSITY_OLD(i+1,j,k)
 								+DENSITY_OLD(i,j-1,k)+DENSITY_OLD(i,j+1,k)
 								+DENSITY_OLD(i,j,k-1)+DENSITY_OLD(i,j,k+1) - 6*DENSITY_OLD(i,j,k) );
 			}		
@@ -274,7 +273,7 @@ void Diffusion3D::FTCS() {
 		//#pragma omp parallel for
 		for (count_type j=2; j<local_ny_-2; j++) {
 			for (count_type i=2; i<local_nx_-2; i++) {
-	    			DENSITY(i,j,k) += prefac*(	 DENSITY_OLD(i-1,j,k)+DENSITY_OLD(i+1,j,k)
+	    			DENSITY(i,j,k) = DENSITY_OLD(i,j,k)+ prefac*(	 DENSITY_OLD(i-1,j,k)+DENSITY_OLD(i+1,j,k)
 								+DENSITY_OLD(i,j-1,k)+DENSITY_OLD(i,j+1,k)
 								+DENSITY_OLD(i,j,k-1)+DENSITY_OLD(i,j,k+1) - 6*DENSITY_OLD(i,j,k) );
 			}		
