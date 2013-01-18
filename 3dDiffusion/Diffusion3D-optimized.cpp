@@ -12,6 +12,7 @@
 
 #define DENSITY(I,J,K) density_.data_[(I)+(J)*local_nx_+(K)*local_nx_*local_ny_]
 #define DENSITY_OLD(I,J,K) density_old_.data_[(I)+(J)*local_nx_+(K)*local_nx_*local_ny_]
+#define MIN(X,Y) ((X) < (Y) ?  (X) : (Y))
 
 //constructor
 Diffusion3D::Diffusion3D(val_type dx, count_type nx, count_type ny, count_type nz,coord_type topology,val_type D, val_type T):
@@ -70,8 +71,6 @@ void Diffusion3D::setup_MPI_stuff() {
 	MPI_Cart_shift(cart_comm_,1,1,&bottom_,&top_);
 	MPI_Cart_shift(cart_comm_,2,1,&back_,&front_);	//z direction points forwards -->back,front (or front,back), not quite sure...
 	
-	/*std::cout << "Rank: "<< rank_ << " is at position: " << cartesian_coords_[0] << " " << cartesian_coords_[1] << " " << cartesian_coords_[2]
-		<< "left right | bottom top | back front " << left_ << " " << right_ << " | " << bottom_ << " " << top_ << " | " << back_ << " " << front_ << "\n";*/
 	
 
 	
@@ -82,23 +81,6 @@ void Diffusion3D::setup_MPI_stuff() {
 	MPI_Type_vector(local_nz_,local_nx_,local_nx_*local_ny_,mpi_val_type,&planexz_type_);
 	
 	//yz-plane:
-/*
-	//use indexed type creator
-	std::vector<int> offsets(local_ny_*local_nz_);
-	int outer_counter = 0;
-	#pragma omp parallel for
-	for (int k = 0; k < local_nz_;k++,outer_counter++) {
-		int inner_counter = 0;
-		for (int j = 0; j < local_ny_;j++,inner_counter++) {
-			offsets[j+local_ny_*k] = inner_counter*local_nx_ + outer_counter*(local_nx_*local_ny_);
-			if (rank_==0)
-				std::cout << offsets.at(j+local_ny_*k) << " ";
-		}
-	} std::cout << "\n";
-	std::vector<int> blocklens(local_ny_*local_nz_,1);
-	MPI_Type_indexed(local_ny_*local_nz_,blocklens.data(),offsets.data(),mpi_val_type,&planeyz_type_);
-	
-	Damn I think this is the same as */
 	MPI_Type_vector(local_ny_*local_nz_,1,local_nx_,mpi_val_type,&planeyz_type_);
 
 	MPI_Type_commit(&planexy_type_);
@@ -222,13 +204,23 @@ void Diffusion3D::FTCS() {
 
 	// do computation of interior nodes
 	val_type prefac = D_*dt_/(dx_*dx_*dx_);
+	const short CX = 8;
+	const short CY = 8;
+	const short CZ = 8;
 	#pragma omp parallel for schedule(static)
-	for (count_type k=2; k<local_nz_-2; k++) {
-		for (count_type j=2; j<local_ny_-2; j++) {
-			for (count_type i=2;i<local_nx_-2; i++) {
-	    			DENSITY(i,j,k) = DENSITY_OLD(i,j,k) + prefac*(	 DENSITY_OLD(i-1,j,k)+DENSITY_OLD(i+1,j,k)
+	for (count_type k=2; k<local_nz_-2; k+=CZ) {
+		for (count_type j=2; j<local_ny_-2; j+=CY) {
+			for (count_type i=2;i<local_nx_-2; i+=CX) {
+				//cache blocking
+				for (count_type ck=k;ck < MIN(k+CZ,local_nz_-2);ck++) {
+				for (count_type cj=j;cj < MIN(j+CY,local_ny_-2);cj++) {
+				for (count_type ci=i;ci < MIN(i+CX,local_nx_-2);ci++) {
+	    				DENSITY(i,j,k) = DENSITY_OLD(i,j,k) + prefac*(	 DENSITY_OLD(i-1,j,k)+DENSITY_OLD(i+1,j,k)
 								+DENSITY_OLD(i,j-1,k)+DENSITY_OLD(i,j+1,k)
 								+DENSITY_OLD(i,j,k-1)+DENSITY_OLD(i,j,k+1) - 6*DENSITY_OLD(i,j,k) );
+				}
+				}
+				}
 			}
 		}
 	}

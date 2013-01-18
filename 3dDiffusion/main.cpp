@@ -4,7 +4,7 @@
 #include "Diffusion3D.hpp"
 #include <mpi.h>
 #include <string>
-//#include <omp.h>
+#include <omp.h>
 
 
 int main(int argc, char *argv[]) {
@@ -12,7 +12,7 @@ int main(int argc, char *argv[]) {
 		std::cerr << "Too few arguments: [dx] [nx] [ny] [nz] [topology x] [topology y] [topology z]\n";
 		return 1;
 	}
-	//omp_set_num_threads(16);
+	omp_set_num_threads(16);
 	MPI_Init(&argc,&argv);
 	int rank;
 	MPI_Comm_rank(MPI_COMM_WORLD,&rank);
@@ -27,7 +27,7 @@ int main(int argc, char *argv[]) {
 	unsigned int topo_z = atoi(argv[7]);
 	Diffusion3D::coord_type topology = {topo_x,topo_y,topo_z};	//a 2x2x2 mesh
 	double D = 1.;
-	double T = 1.;
+	double T = 0.4;
 
 
 	Diffusion3D Simulation(dx,nx,ny,nz,topology,D,T);
@@ -46,7 +46,7 @@ int main(int argc, char *argv[]) {
 	double runtime = t1-t0;
 	double flops = (nx*ny*nz*9*T/Simulation.get_dt())/runtime;
 	std::string fname = "densities-";
-	Simulation.print_density(fname);
+	//Simulation.print_density(fname);
 	if (rank==0) 
 		std::cout << "3dDiffusion-nodes-dx-nx-ny-nz-runtime-flops " << topo_x*topo_y*topo_z << " " << dx << " " << nx << " " << ny << " " << nz <<
 				  " " << runtime << " " << flops << "\n";
