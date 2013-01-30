@@ -5,7 +5,7 @@
 #include <mpi.h>
 #include <string>
 #include <omp.h>
-
+#include <cstdlib>
 
 int main(int argc, char *argv[]) {
 	if (argc < 8) {
@@ -19,19 +19,19 @@ int main(int argc, char *argv[]) {
 	
 	double dx = atof(argv[1]);
 
-	unsigned int nx = atoi(argv[2]);
-	unsigned int ny = atoi(argv[3]);
-	unsigned int nz = atoi(argv[4]);
-	unsigned int topo_x = atoi(argv[5]);
-	unsigned int topo_y = atoi(argv[6]);
-	unsigned int topo_z = atoi(argv[7]);
+	unsigned int nx = std::atoi(argv[2]);
+	unsigned int ny = std::atoi(argv[3]);
+	unsigned int nz = std::atoi(argv[4]);
+	unsigned int topo_x = std::atoi(argv[5]);
+	unsigned int topo_y = std::atoi(argv[6]);
+	unsigned int topo_z = std::atoi(argv[7]);
 	Diffusion3D::coord_type topology = {topo_x,topo_y,topo_z};	//a 2x2x2 mesh
 	double D = 1.;
 	double T = 0.4;
 
 
 	Diffusion3D Simulation(dx,nx,ny,nz,topology,D,T);
-	
+
 
 	MPI_Comm_rank(MPI_COMM_WORLD,&rank);
 	if (rank==0) {
